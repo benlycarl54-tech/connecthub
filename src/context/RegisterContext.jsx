@@ -27,9 +27,14 @@ export function RegisterProvider({ children }) {
     const id = Date.now().toString();
     // First ever account becomes admin automatically
     const isFirstAccount = accounts.length === 0;
+    // Auto-generate username from first+last name + short id suffix
+    const baseUsername = `${(profileData.firstName || "").toLowerCase()}${(profileData.lastName || "").toLowerCase()}`.replace(/\s+/g, "");
+    const suffix = id.slice(-4);
+    const autoUsername = profileData.username || (baseUsername ? `${baseUsername}${suffix}` : `user${suffix}`);
     const newAccount = {
       id,
       ...profileData,
+      username: autoUsername,
       followers: 0,
       following: 0,
       likes: 0,

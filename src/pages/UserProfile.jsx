@@ -116,8 +116,13 @@ export default function UserProfile() {
             {user.username && (
               <p className="text-xs text-[#1877F2] font-medium">@{user.username}</p>
             )}
-            <p className="text-xs text-gray-500 mt-0.5">
-              {formatCount(user.followers)} followers · {formatCount(user.following)} following · {formatCount(user.likes || 0)} likes
+            <p className="text-sm text-gray-800 mt-1">
+              <span className="font-bold">{formatCount(user.followers)}</span>
+              <span className="text-gray-500"> followers · </span>
+              <span className="font-bold">{formatCount(user.following)}</span>
+              <span className="text-gray-500"> following · </span>
+              <span className="font-bold">{formatCount(user.likes || 0)}</span>
+              <span className="text-gray-500"> posts</span>
             </p>
           </div>
         </div>

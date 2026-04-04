@@ -16,9 +16,16 @@ function getUserPosts(userId) {
   } catch { return []; }
 }
 
+function formatCount(n) {
+  if (!n) return "0";
+  if (n >= 1000000) return (n / 1000000).toFixed(1) + "M";
+  if (n >= 1000) return (n / 1000).toFixed(1) + "K";
+  return n.toString();
+}
+
 export default function Profile() {
   const navigate = useNavigate();
-  const { currentUser, logout } = useFBAuth();
+  const { currentUser, logout, updateCurrentUser } = useFBAuth();
   const { data } = useRegister();
   const [activeTab, setActiveTab] = useState("All");
   const [showBanner, setShowBanner] = useState(true);
@@ -159,8 +166,11 @@ export default function Profile() {
                 </button>
               )}
             </div>
-            <p className="text-sm text-gray-500 mb-1">
-              {currentUser?.followers || 0} followers · {currentUser?.following || 0} following
+            <p className="text-sm text-gray-800 mb-1">
+              <span className="font-bold">{formatCount(currentUser?.followers || 0)}</span>
+              <span className="text-gray-500"> followers · </span>
+              <span className="font-bold">{formatCount(currentUser?.following || 0)}</span>
+              <span className="text-gray-500"> following</span>
             </p>
 
             <div className="flex gap-2 mt-3">
