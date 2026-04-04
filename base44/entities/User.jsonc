@@ -1,0 +1,134 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "firstName": {
+      "type": "string",
+      "description": "User's first name"
+    },
+    "lastName": {
+      "type": "string",
+      "description": "User's last name"
+    },
+    "emailAddress": {
+      "type": "string",
+      "description": "User's email address"
+    },
+    "mobileNumber": {
+      "type": "string",
+      "description": "User's mobile number"
+    },
+    "password": {
+      "type": "string",
+      "description": "User's password"
+    },
+    "profilePicture": {
+      "type": "string",
+      "description": "URL to user's profile picture"
+    },
+    "coverPhoto": {
+      "type": "string",
+      "description": "URL to user's cover photo"
+    },
+    "username": {
+      "type": "string",
+      "description": "User's unique username"
+    },
+    "bio": {
+      "type": "string",
+      "description": "User's bio"
+    },
+    "followers": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of followers"
+    },
+    "following": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of users being followed"
+    },
+    "likes": {
+      "type": "number",
+      "default": 0,
+      "description": "Total likes received"
+    },
+    "is_verified": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether user is verified"
+    },
+    "is_admin": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether user is an admin"
+    },
+    "is_banned": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether user is banned"
+    },
+    "birthday": {
+      "type": "string",
+      "format": "date",
+      "description": "User's birthday"
+    },
+    "gender": {
+      "type": "string",
+      "enum": [
+        "male",
+        "female",
+        "other"
+      ],
+      "description": "User's gender"
+    },
+    "currentCity": {
+      "type": "string",
+      "description": "User's current city"
+    },
+    "hometown": {
+      "type": "string",
+      "description": "User's hometown"
+    },
+    "relationshipStatus": {
+      "type": "string",
+      "description": "User's relationship status"
+    },
+    "highSchool": {
+      "type": "string",
+      "description": "User's high school"
+    },
+    "workExperience": {
+      "type": "string",
+      "description": "User's work experience"
+    },
+    "hobbies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "User's hobbies"
+    },
+    "music": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "User's favorite music"
+    },
+    "sports": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "User's favorite sports"
+    }
+  },
+  "required": [
+    "firstName",
+    "lastName",
+    "emailAddress",
+    "mobileNumber",
+    "password"
+  ]
+}

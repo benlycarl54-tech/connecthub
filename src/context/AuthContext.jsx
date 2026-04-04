@@ -1,5 +1,6 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import { FEED_USERS, getFeedUserById } from "@/data/feedUsers.js";
+import { base44 } from "@/api/base44Client";
 
 const FBAuthContext = createContext(null);
 
@@ -32,62 +33,59 @@ export function FBAuthProvider({ children }) {
     try { return JSON.parse(localStorage.getItem("fbCurrentUser") || "null"); } catch { return null; }
   });
 
-  const getAccounts = () => {
-    try { return JSON.parse(localStorage.getItem("fbAccounts") || "[]"); } catch { return []; }
+  const register = async (profileData) => {
+    try {
+      const baseUsername = `${(profileData.firstName || "").toLowerCase()}${(profileData.lastName || "").toLowerCase()}`.replace(/\s+/g, "");
+      const allUsers = await base44.entities.User.list();
+      const suffix = Date.now().toString().slice(-4);
+      const autoUsername = profileData.username || (baseUsername ? `${baseUsername}${suffix}` : `user${suffix}`);
+      
+      const newUser = await base44.entities.User.create({
+        ...profileData,
+        username: autoUsername,
+        followers: 0,
+        following: 0,
+        likes: 0,
+        is_verified: false,
+        is_admin: allUsers.length === 0, // First user becomes admin
+        is_banned: false,
+      });
+      
+      localStorage.setItem("fbCurrentUser", JSON.stringify(newUser));
+      setCurrentUser(newUser);
+      return newUser;
+    } catch (error) {
+      console.error("Registration error:", error);
+      throw error;
+    }
   };
 
-  const saveAccounts = (accounts) => {
-    localStorage.setItem("fbAccounts", JSON.stringify(accounts));
-  };
-
-  const register = (profileData) => {
-    const accounts = getAccounts();
-    const id = Date.now().toString();
-    const baseUsername = `${(profileData.firstName || "").toLowerCase()}${(profileData.lastName || "").toLowerCase()}`.replace(/\s+/g, "");
-    const suffix = id.slice(-4);
-    const autoUsername = profileData.username || (baseUsername ? `${baseUsername}${suffix}` : `user${suffix}`);
-    const newAccount = {
-      id,
-      ...profileData,
-      username: autoUsername,
-      followers: 0,
-      following: 0,
-      likes: 0,
-      is_verified: false,
-      is_admin: false,
-      is_banned: false,
-      created_date: new Date().toISOString(),
-    };
-    // First ever account becomes admin
-    if (accounts.length === 0) newAccount.is_admin = true;
-    accounts.push(newAccount);
-    saveAccounts(accounts);
-    localStorage.setItem("fbCurrentUser", JSON.stringify(newAccount));
-    setCurrentUser(newAccount);
-    return newAccount;
-  };
-
-  const login = (identifier, password) => {
-    const accounts = getAccounts();
-    const accountExists = accounts.find(a =>
-      (a.emailAddress === identifier || a.mobileNumber === identifier)
-    );
-    
-    if (!accountExists) {
-      return { success: false, error: "No account found with this email or mobile number. Please create an account." };
+  const login = async (identifier, password) => {
+    try {
+      const users = await base44.entities.User.filter({});
+      const user = users.find(u =>
+        (u.emailAddress === identifier || u.mobileNumber === identifier)
+      );
+      
+      if (!user) {
+        return { success: false, error: "No account found with this email or mobile number. Please create an account." };
+      }
+      
+      if (user.password !== password) {
+        return { success: false, error: "Incorrect password. Please try again." };
+      }
+      
+      if (user.is_banned) {
+        return { success: false, error: "This account has been suspended. Please contact support." };
+      }
+      
+      localStorage.setItem("fbCurrentUser", JSON.stringify(user));
+      setCurrentUser(user);
+      return { success: true };
+    } catch (error) {
+      console.error("Login error:", error);
+      return { success: false, error: "Login failed. Please try again." };
     }
-    
-    if (accountExists.password !== password) {
-      return { success: false, error: "Incorrect password. Please try again." };
-    }
-    
-    if (accountExists.is_banned) {
-      return { success: false, error: "This account has been suspended. Please contact support." };
-    }
-    
-    localStorage.setItem("fbCurrentUser", JSON.stringify(accountExists));
-    setCurrentUser(accountExists);
-    return { success: true };
   };
 
   const logout = () => {
@@ -95,15 +93,14 @@ export function FBAuthProvider({ children }) {
     setCurrentUser(null);
   };
 
-  const updateCurrentUser = (updates) => {
-    const accounts = getAccounts();
-    const idx = accounts.findIndex(a => a.id === currentUser?.id);
-    if (idx !== -1) {
-      accounts[idx] = { ...accounts[idx], ...updates };
-      saveAccounts(accounts);
-      const updated = accounts[idx];
+  const updateCurrentUser = async (updates) => {
+    try {
+      if (!currentUser?.id) return;
+      const updated = await base44.entities.User.update(currentUser.id, updates);
       localStorage.setItem("fbCurrentUser", JSON.stringify(updated));
       setCurrentUser(updated);
+    } catch (error) {
+      console.error("Update user error:", error);
     }
   };
 
@@ -241,11 +238,23 @@ export function FBAuthProvider({ children }) {
     return requests.includes(userId);
   };
 
-  const getAllUsers = () => [...getAccounts(), ...FEED_USERS];
+  const getAllUsers = async () => {
+    try {
+      const users = await base44.entities.User.list();
+      return [...users, ...FEED_USERS];
+    } catch (error) {
+      console.error("Get all users error:", error);
+      return FEED_USERS;
+    }
+  };
 
-  const getUserById = (id) => {
-    if (id && id.startsWith("feed_")) return getFeedUserById(id);
-    return getAccounts().find(a => a.id === id) || null;
+  const getUserById = async (id) => {
+    try {
+      if (id && id.startsWith("feed_")) return getFeedUserById(id);
+      return await base44.entities.User.get(id);
+    } catch (error) {
+      return null;
+    }
   };
 
   // ── Marketplace Management ──────────────────────────────────────────────
@@ -482,31 +491,37 @@ export function FBAuthProvider({ children }) {
   };
   // ─────────────────────────────────────────────────────────────────────
 
-  const searchUsers = (query) => {
+  const searchUsers = async (query) => {
     if (!query.trim()) return [];
     const q = query.toLowerCase().trim();
-    const accountMatches = getAccounts().filter(a => {
-      const fullName = `${a.firstName || ""} ${a.lastName || ""}`.toLowerCase();
-      const email = (a.emailAddress || "").toLowerCase();
-      const username = (a.username || "").toLowerCase();
-      return fullName.includes(q) || email.includes(q) || username.includes(q);
-    });
-    const feedMatches = FEED_USERS.filter(u =>
-      `${u.firstName} ${u.lastName}`.toLowerCase().includes(q)
-    );
-    return [...accountMatches, ...feedMatches];
+    try {
+      const users = await base44.entities.User.list();
+      const accountMatches = users.filter(a => {
+        const fullName = `${a.firstName || ""} ${a.lastName || ""}`.toLowerCase();
+        const email = (a.emailAddress || "").toLowerCase();
+        const username = (a.username || "").toLowerCase();
+        return fullName.includes(q) || email.includes(q) || username.includes(q);
+      });
+      const feedMatches = FEED_USERS.filter(u =>
+        `${u.firstName} ${u.lastName}`.toLowerCase().includes(q)
+      );
+      return [...accountMatches, ...feedMatches];
+    } catch (error) {
+      return FEED_USERS.filter(u =>
+        `${u.firstName} ${u.lastName}`.toLowerCase().includes(q)
+      );
+    }
   };
 
-  const adminUpdateUser = (userId, updates) => {
-    const accounts = getAccounts();
-    const idx = accounts.findIndex(a => a.id === userId);
-    if (idx !== -1) {
-      accounts[idx] = { ...accounts[idx], ...updates };
-      saveAccounts(accounts);
+  const adminUpdateUser = async (userId, updates) => {
+    try {
+      const updated = await base44.entities.User.update(userId, updates);
       if (currentUser?.id === userId) {
-        localStorage.setItem("fbCurrentUser", JSON.stringify(accounts[idx]));
-        setCurrentUser(accounts[idx]);
+        localStorage.setItem("fbCurrentUser", JSON.stringify(updated));
+        setCurrentUser(updated);
       }
+    } catch (error) {
+      console.error("Admin update error:", error);
     }
   };
 

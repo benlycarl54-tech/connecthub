@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Search, Shield, X, Edit3, Save, Ban, CheckCircle } from "lucide-react";
 import { useFBAuth } from "@/context/AuthContext";
@@ -115,8 +115,25 @@ export default function AdminPanel() {
   const [search, setSearch] = useState("");
   const [editingUser, setEditingUser] = useState(null);
   const [saved, setSaved] = useState(false);
+  const [allUsers, setAllUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  if (!currentUser?.is_admin && currentUser?.role !== 'admin') {
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const loadUsers = async () => {
+    try {
+      const users = await getAllUsers();
+      setAllUsers(users.filter(u => !u.id.startsWith("feed_")));
+    } catch (error) {
+      console.error("Load users error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!currentUser?.is_admin) {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center max-w-md mx-auto px-6">
         <Shield className="w-16 h-16 text-gray-300 mb-4" />
@@ -127,17 +144,26 @@ export default function AdminPanel() {
     );
   }
 
-  const allUsers = getAllUsers().filter(u => !u.id.startsWith("feed_"));
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F0F2F5] max-w-md mx-auto flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
   const filtered = allUsers;
 
-  const handleSave = (userId, updates) => {
-    adminUpdateUser(userId, updates);
+  const handleSave = async (userId, updates) => {
+    await adminUpdateUser(userId, updates);
+    await loadUsers();
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
 
-  const quickToggle = (user, field) => {
-    adminUpdateUser(user.id, { [field]: !user[field] });
+  const quickToggle = async (user, field) => {
+    await adminUpdateUser(user.id, { [field]: !user[field] });
+    await loadUsers();
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
