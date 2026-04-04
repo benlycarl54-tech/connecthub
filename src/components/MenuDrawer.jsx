@@ -134,17 +134,6 @@ export default function MenuDrawer({ isOpen, onClose }) {
           {expandedSettings && (
             <div className="px-3 py-2 text-sm text-gray-600 space-y-1">
               <p>Settings • Privacy Checkup</p>
-              {currentUser?.is_admin && (
-                <button
-                  onClick={() => {
-                    navigate("/admin");
-                    onClose();
-                  }}
-                  className="text-[#1877F2] font-semibold block flex items-center gap-2"
-                >
-                  <Shield className="w-4 h-4" /> Admin Panel
-                </button>
-              )}
               <button
                 onClick={() => {
                   logout();
@@ -158,6 +147,22 @@ export default function MenuDrawer({ isOpen, onClose }) {
             </div>
           )}
         </div>
+
+        {/* Admin Panel - Only for admins */}
+        {currentUser?.is_admin && (
+          <div className="px-4 py-3 border-t border-gray-200">
+            <button
+              onClick={() => {
+                navigate("/admin");
+                onClose();
+              }}
+              className="w-full flex items-center gap-3 py-2 px-3 rounded-lg bg-red-50 hover:bg-red-100 transition-colors"
+            >
+              <Shield className="w-5 h-5 text-red-600" />
+              <span className="font-bold text-red-600 text-sm">Admin Panel</span>
+            </button>
+          </div>
+        )}
 
         {/* Professional Access */}
         <div className="px-4 py-3 border-t border-gray-200">
