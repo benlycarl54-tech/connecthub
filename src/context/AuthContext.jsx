@@ -43,9 +43,13 @@ export function FBAuthProvider({ children }) {
   const register = (profileData) => {
     const accounts = getAccounts();
     const id = Date.now().toString();
+    const baseUsername = `${(profileData.firstName || "").toLowerCase()}${(profileData.lastName || "").toLowerCase()}`.replace(/\s+/g, "");
+    const suffix = id.slice(-4);
+    const autoUsername = profileData.username || (baseUsername ? `${baseUsername}${suffix}` : `user${suffix}`);
     const newAccount = {
       id,
       ...profileData,
+      username: autoUsername,
       followers: 0,
       following: 0,
       likes: 0,

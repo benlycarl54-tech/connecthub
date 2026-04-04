@@ -170,7 +170,9 @@ export default function Profile() {
               <span className="font-bold">{formatCount(currentUser?.followers || 0)}</span>
               <span className="text-gray-500"> followers · </span>
               <span className="font-bold">{formatCount(currentUser?.following || 0)}</span>
-              <span className="text-gray-500"> following</span>
+              <span className="text-gray-500"> following · </span>
+              <span className="font-bold">{formatCount(currentUser?.likes || 0)}</span>
+              <span className="text-gray-500"> posts</span>
             </p>
 
             <div className="flex gap-2 mt-3">
