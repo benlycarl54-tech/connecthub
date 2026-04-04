@@ -4,8 +4,11 @@ import { Home as HomeIcon, Users, PlaySquare, Bell, Menu, Search, Plus, MessageC
 import { useRegister } from "../context/RegisterContext";
 import { useFBAuth } from "../context/AuthContext";
 import { FEED_POSTS } from "../data/feedPosts";
+import PostCard from "../components/post/PostCard";
+import CreatePost from "./CreatePost";
+import BottomTabBar from "../components/home/BottomTabBar";
 
-// Interleave video posts (id >= 101) every 3 regular posts for a natural feed mix
+// Interleave video posts (id >= 101) every 2 regular posts for a natural feed mix
 const REGULAR_POSTS = FEED_POSTS.filter(p => p.id < 101);
 const VIDEO_POSTS = FEED_POSTS.filter(p => p.id >= 101);
 const MIXED_FEED = [];
@@ -14,9 +17,6 @@ VIDEO_POSTS.forEach((vp, i) => {
   if (REGULAR_POSTS[i * 2 + 1]) MIXED_FEED.push(REGULAR_POSTS[i * 2 + 1]);
   MIXED_FEED.push(vp);
 });
-import PostCard from "../components/post/PostCard";
-import CreatePost from "./CreatePost";
-import BottomTabBar from "../components/home/BottomTabBar";
 
 function getLiveState() {
   try { return JSON.parse(localStorage.getItem("fb_live_state") || "null"); } catch { return null; }
