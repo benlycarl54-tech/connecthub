@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ThumbsUp, MessageSquare, Share2, X, Send } from "lucide-react";
+import { ThumbsUp, MessageSquare, Share2, X, Send, Play, Volume2, VolumeX } from "lucide-react";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { useFBAuth } from "@/context/AuthContext";
 
@@ -29,7 +29,6 @@ function getInitialComments(postId, count) {
 export default function PostCard({ post, authorName, authorAvatar, authorVerified, authorColor, authorId: authorIdProp }) {
   const { currentUser } = useFBAuth();
   const navigate = useNavigate();
-  const [liked, setLiked] = useState(false);
   const [reaction, setReaction] = useState(null);
   const [likesCount, setLikesCount] = useState(post.likes || 0);
   const [showReactions, setShowReactions] = useState(false);
@@ -37,6 +36,9 @@ export default function PostCard({ post, authorName, authorAvatar, authorVerifie
   const [comments, setComments] = useState(() => getInitialComments(post.id, post.comments || 0));
   const [commentText, setCommentText] = useState("");
   const [reactionTimer, setReactionTimer] = useState(null);
+  const [videoPlaying, setVideoPlaying] = useState(false);
+  const [muted, setMuted] = useState(false);
+  const videoRef = useRef(null);
 
   const authorId = authorIdProp || post.authorId;
   const name = authorName || post.name;
@@ -133,8 +135,51 @@ export default function PostCard({ post, authorName, authorAvatar, authorVerifie
       )}
 
       {/* Image */}
-      {post.image && (
+      {post.image && !post.video && (
         <img src={post.image} alt="post" className="w-full object-cover" style={{ maxHeight: 360 }} />
+      )}
+
+      {/* Video Post */}
+      {post.video && (
+        <div className="relative bg-black">
+          {!videoPlaying ? (
+            <div className="relative cursor-pointer" onClick={() => setVideoPlaying(true)}>
+              <img src={post.videoThumb} alt="video" className="w-full object-cover" style={{ maxHeight: 240 }} onError={e => { e.target.style.display = "none"; }} />
+              <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                <div className="w-14 h-14 bg-black/70 rounded-full flex items-center justify-center">
+                  <Play className="w-7 h-7 text-white fill-white ml-1" />
+                </div>
+              </div>
+              <div className="absolute bottom-2 right-2 bg-black/60 rounded px-1.5 py-0.5">
+                <span className="text-white text-xs font-semibold">{post.views} views</span>
+              </div>
+            </div>
+          ) : (
+            <div className="relative">
+              <video
+                ref={videoRef}
+                src={post.video}
+                autoPlay
+                muted={muted}
+                controls={false}
+                className="w-full"
+                style={{ maxHeight: 280, objectFit: "contain" }}
+                onClick={() => videoRef.current?.paused ? videoRef.current.play() : videoRef.current.pause()}
+              />
+              <div className="absolute top-2 right-2 flex gap-2">
+                <button onClick={() => setMuted(m => !m)} className="w-8 h-8 bg-black/60 rounded-full flex items-center justify-center">
+                  {muted ? <VolumeX className="w-4 h-4 text-white" /> : <Volume2 className="w-4 h-4 text-white" />}
+                </button>
+                <button onClick={() => setVideoPlaying(false)} className="w-8 h-8 bg-black/60 rounded-full flex items-center justify-center">
+                  <X className="w-4 h-4 text-white" />
+                </button>
+              </div>
+              <div className="absolute bottom-2 right-2 bg-black/60 rounded px-1.5 py-0.5">
+                <span className="text-white text-xs font-semibold">{post.views} views</span>
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       {/* Stats bar */}

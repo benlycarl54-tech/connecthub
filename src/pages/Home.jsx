@@ -4,6 +4,16 @@ import { Home as HomeIcon, Users, PlaySquare, Bell, Menu, Search, Plus, MessageC
 import { useRegister } from "../context/RegisterContext";
 import { useFBAuth } from "../context/AuthContext";
 import { FEED_POSTS } from "../data/feedPosts";
+
+// Interleave video posts (id >= 101) every 3 regular posts for a natural feed mix
+const REGULAR_POSTS = FEED_POSTS.filter(p => p.id < 101);
+const VIDEO_POSTS = FEED_POSTS.filter(p => p.id >= 101);
+const MIXED_FEED = [];
+VIDEO_POSTS.forEach((vp, i) => {
+  if (REGULAR_POSTS[i * 2]) MIXED_FEED.push(REGULAR_POSTS[i * 2]);
+  if (REGULAR_POSTS[i * 2 + 1]) MIXED_FEED.push(REGULAR_POSTS[i * 2 + 1]);
+  MIXED_FEED.push(vp);
+});
 import PostCard from "../components/post/PostCard";
 import CreatePost from "./CreatePost";
 import BottomTabBar from "../components/home/BottomTabBar";
@@ -238,8 +248,8 @@ export default function Home() {
           <PostCard key={post.id} post={post} authorName={post.name} authorAvatar={post.avatar} authorVerified={post.verified} authorId={post.authorId} />
         ))}
 
-        {/* Feed posts */}
-        {FEED_POSTS.map(post => (
+        {/* Mixed feed posts */}
+        {MIXED_FEED.map(post => (
           <PostCard key={post.id} post={post} />
         ))}
       </div>
