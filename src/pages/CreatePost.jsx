@@ -8,27 +8,34 @@ export default function CreatePost({ onClose, onPost }) {
   const { currentUser } = useFBAuth();
   const navigate = useNavigate();
   const [content, setContent] = useState("");
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
+  const [imageFiles, setImageFiles] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
   const [uploading, setUploading] = useState(false);
 
   const fullName = currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : "User";
   const avatar = currentUser?.profilePicture;
 
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    const newFiles = [...imageFiles, ...files].slice(0, 4);
+    const newPreviews = newFiles.map(f => URL.createObjectURL(f));
+    setImageFiles(newFiles);
+    setImagePreviews(newPreviews);
+  };
+
+  const removeImage = (index) => {
+    setImageFiles(imageFiles.filter((_, i) => i !== index));
+    setImagePreviews(imagePreviews.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async () => {
-    if (!content.trim() && !imageFile) return;
+    if (!content.trim() && imageFiles.length === 0) return;
     setUploading(true);
-    let imageUrl = null;
-    if (imageFile) {
-      const res = await base44.integrations.Core.UploadFile({ file: imageFile });
-      imageUrl = res.file_url;
+    const imageUrls = [];
+    for (const file of imageFiles) {
+      const res = await base44.integrations.Core.UploadFile({ file });
+      imageUrls.push(res.file_url);
     }
     const newPost = {
       id: Date.now(),
@@ -38,7 +45,8 @@ export default function CreatePost({ onClose, onPost }) {
       time: "Just now",
       privacy: "🌐",
       content: content.trim(),
-      image: imageUrl,
+      image: imageUrls[0] || null,
+      images: imageUrls,
       likes: 0,
       comments: 0,
       shares: 0,
@@ -46,7 +54,6 @@ export default function CreatePost({ onClose, onPost }) {
       verified: currentUser?.is_verified || false,
     };
     setUploading(false);
-    // Save to localStorage so it shows on profile
     try {
       const stored = JSON.parse(localStorage.getItem("fb_user_posts") || "[]");
       stored.unshift(newPost);
@@ -97,16 +104,25 @@ export default function CreatePost({ onClose, onPost }) {
           rows={4}
         />
 
-        {/* Image preview */}
-        {imagePreview && (
-          <div className="relative mx-4 mb-3">
-            <img src={imagePreview} alt="preview" className="w-full rounded-xl object-cover max-h-60" />
-            <button
-              onClick={() => { setImageFile(null); setImagePreview(null); }}
-              className="absolute top-2 right-2 w-7 h-7 bg-black/50 rounded-full flex items-center justify-center"
-            >
-              <X className="w-4 h-4 text-white" />
-            </button>
+        {/* Image preview gallery */}
+        {imagePreviews.length > 0 && (
+          <div className="mx-4 mb-3">
+            <div className={`grid gap-2 ${imagePreviews.length === 1 ? 'grid-cols-1' : imagePreviews.length === 2 ? 'grid-cols-2' : imagePreviews.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+              {imagePreviews.map((preview, idx) => (
+                <div key={idx} className="relative rounded-lg overflow-hidden">
+                  <img src={preview} alt="preview" className="w-full h-32 object-cover" />
+                  <button
+                    onClick={() => removeImage(idx)}
+                    className="absolute top-1 right-1 w-6 h-6 bg-black/50 rounded-full flex items-center justify-center"
+                  >
+                    <X className="w-3 h-3 text-white" />
+                  </button>
+                </div>
+              ))}
+            </div>
+            {imagePreviews.length < 4 && (
+              <p className="text-xs text-gray-500 mt-2">You can add up to 4 images</p>
+            )}
           </div>
         )}
 
@@ -114,7 +130,7 @@ export default function CreatePost({ onClose, onPost }) {
         <div className="px-4 pb-4 flex items-center justify-between border-t border-gray-100 pt-3">
           <div className="flex items-center gap-3">
             <label className="cursor-pointer">
-              <input type="file" accept="image/*,video/*" className="hidden" onChange={handleImageChange} />
+              <input type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleImageChange} />
               <div className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100">
                 <Image className="w-5 h-5 text-green-500" />
               </div>
@@ -128,7 +144,7 @@ export default function CreatePost({ onClose, onPost }) {
           </div>
           <button
             onClick={handleSubmit}
-            disabled={(!content.trim() && !imageFile) || uploading}
+            disabled={(!content.trim() && imageFiles.length === 0) || uploading}
             className="bg-[#1877F2] disabled:bg-gray-200 disabled:text-gray-400 text-white font-semibold px-5 py-2 rounded-full text-sm"
           >
             {uploading ? "Posting..." : "Post"}
