@@ -1,0 +1,39 @@
+{
+  "name": "Group",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Group name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Group description"
+    },
+    "privacy": {
+      "type": "string",
+      "enum": [
+        "public",
+        "private"
+      ],
+      "default": "private",
+      "description": "Group privacy setting"
+    },
+    "owner_id": {
+      "type": "string",
+      "description": "ID of the group creator"
+    },
+    "icon": {
+      "type": "string",
+      "description": "Group icon emoji or image URL"
+    },
+    "members_count": {
+      "type": "number",
+      "default": 1
+    }
+  },
+  "required": [
+    "name",
+    "owner_id"
+  ]
+}

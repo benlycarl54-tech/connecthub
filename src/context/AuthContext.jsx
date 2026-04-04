@@ -237,6 +237,108 @@ export function FBAuthProvider({ children }) {
     return getAccounts().find(a => a.id === id) || null;
   };
 
+  // ── Group Management ──────────────────────────────────────────────
+  const getGroups = () => {
+    try { return JSON.parse(localStorage.getItem("fb_groups") || "[]"); } catch { return []; }
+  };
+
+  const saveGroups = (groups) => {
+    localStorage.setItem("fb_groups", JSON.stringify(groups));
+  };
+
+  const createGroup = (groupData) => {
+    if (!currentUser) return null;
+    const groups = getGroups();
+    const id = Date.now().toString();
+    const newGroup = {
+      id,
+      ...groupData,
+      created_at: new Date().toISOString(),
+      members_count: 1,
+    };
+    groups.push(newGroup);
+    saveGroups(groups);
+
+    // Add current user as member
+    const membersKey = `fb_group_members_${id}`;
+    localStorage.setItem(membersKey, JSON.stringify([currentUser.id]));
+
+    return newGroup;
+  };
+
+  const getGroupsByUser = (userId) => {
+    const groups = getGroups();
+    return groups.filter(g => {
+      const membersKey = `fb_group_members_${g.id}`;
+      const members = JSON.parse(localStorage.getItem(membersKey) || "[]");
+      return members.includes(userId);
+    });
+  };
+
+  const getGroupById = (groupId) => {
+    const groups = getGroups();
+    return groups.find(g => g.id === groupId) || null;
+  };
+
+  const getGroupMembers = (groupId) => {
+    const membersKey = `fb_group_members_${groupId}`;
+    const memberIds = JSON.parse(localStorage.getItem(membersKey) || "[]");
+    return memberIds.map(id => getUserById(id)).filter(Boolean);
+  };
+
+  const addGroupMember = (groupId, userId) => {
+    const membersKey = `fb_group_members_${groupId}`;
+    const members = JSON.parse(localStorage.getItem(membersKey) || "[]");
+    if (!members.includes(userId)) {
+      members.push(userId);
+      localStorage.setItem(membersKey, JSON.stringify(members));
+
+      // Update group member count
+      const groups = getGroups();
+      const idx = groups.findIndex(g => g.id === groupId);
+      if (idx !== -1) {
+        groups[idx] = { ...groups[idx], members_count: members.length };
+        saveGroups(groups);
+      }
+      return true;
+    }
+    return false;
+  };
+
+  const removeGroupMember = (groupId, userId) => {
+    const membersKey = `fb_group_members_${groupId}`;
+    const members = JSON.parse(localStorage.getItem(membersKey) || "[]");
+    const updated = members.filter(id => id !== userId);
+    localStorage.setItem(membersKey, JSON.stringify(updated));
+
+    // Update group member count
+    const groups = getGroups();
+    const idx = groups.findIndex(g => g.id === groupId);
+    if (idx !== -1) {
+      groups[idx] = { ...groups[idx], members_count: updated.length };
+      saveGroups(groups);
+    }
+  };
+
+  const postToGroup = (groupId, postData) => {
+    const postsKey = `fb_group_posts_${groupId}`;
+    const posts = JSON.parse(localStorage.getItem(postsKey) || "[]");
+    const newPost = {
+      id: Date.now().toString(),
+      ...postData,
+      created_at: Date.now(),
+    };
+    posts.unshift(newPost);
+    localStorage.setItem(postsKey, JSON.stringify(posts));
+    return newPost;
+  };
+
+  const getGroupPosts = (groupId) => {
+    const postsKey = `fb_group_posts_${groupId}`;
+    return JSON.parse(localStorage.getItem(postsKey) || "[]");
+  };
+  // ─────────────────────────────────────────────────────────────────────
+
   const searchUsers = (query) => {
     if (!query.trim()) return [];
     const q = query.toLowerCase().trim();
@@ -272,6 +374,8 @@ export function FBAuthProvider({ children }) {
       adminUpdateUser, followUser, isFollowing,
       sendFriendRequest, acceptFriendRequest, declineFriendRequest,
       getFriendRequests, getFriends, isFriend, hasPendingRequest,
+      createGroup, getGroupsByUser, getGroupById, getGroupMembers,
+      addGroupMember, removeGroupMember, postToGroup, getGroupPosts,
     }}>
       {children}
     </FBAuthContext.Provider>

@@ -33,6 +33,8 @@ import WelcomeStep from './pages/register/WelcomeStep';
 import FriendsStep from './pages/register/FriendsStep';
 import Home from './pages/Home';
 import Profile from './pages/Profile';
+import GroupsPage from './pages/GroupsPage';
+import GroupDetail from './pages/GroupDetail';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -71,6 +73,8 @@ const AuthenticatedApp = () => {
         <Route path="/register/friends" element={<FriendsStep />} />
         <Route path="/home" element={<Home />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/groups" element={<GroupsPage />} />
+        <Route path="/group/:groupId" element={<GroupDetail />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/user/:userId" element={<UserProfile />} />
         <Route path="/admin" element={<AdminPanel />} />

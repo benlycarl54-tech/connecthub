@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Users, PlaySquare, Bell, User } from "lucide-react";
+import { Home, Users, PlaySquare, Bell, User, MessageCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useFBAuth } from "@/context/AuthContext";
 
@@ -24,6 +24,7 @@ export default function BottomTabBar() {
   const tabs = [
     { Icon: Home, path: "/home", label: "Home" },
     { Icon: Users, path: "/friends", label: "Friends" },
+    { Icon: MessageCircle, path: "/groups", label: "Groups" },
     { Icon: PlaySquare, path: "/videos", label: "Videos" },
     { Icon: Bell, path: "/notifications", label: "Notifications" },
     { Icon: User, path: "/profile", label: "Profile" },
