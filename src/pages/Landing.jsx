@@ -17,7 +17,10 @@ export default function Landing() {
   const handleLogin = (e) => {
     e.preventDefault();
     setError("");
-    if (!identifier || !password) return;
+    if (!identifier || !password) {
+      setError("Please enter your email/phone and password");
+      return;
+    }
     const result = login(identifier, password);
     if (result.success) {
       navigate("/home");

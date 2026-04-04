@@ -127,7 +127,7 @@ export default function AdminPanel() {
     );
   }
 
-  const allUsers = [currentUser].filter(Boolean);
+  const allUsers = getAllUsers().filter(u => !u.id.startsWith("feed_"));
   const filtered = allUsers;
 
   const handleSave = (userId, updates) => {

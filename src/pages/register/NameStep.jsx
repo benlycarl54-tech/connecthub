@@ -25,18 +25,18 @@ export default function NameStep() {
       <h1 className="text-2xl font-bold text-gray-900 mb-1">What's your name?</h1>
       <p className="text-gray-500 text-base mb-6">Enter the name you use in real life.</p>
 
-      <div className="flex gap-3 mb-4">
+      <div className="space-y-3 mb-4">
         <input
           placeholder="First name"
           value={firstName}
           onChange={e => setFirstName(e.target.value)}
-          className="flex-1 border border-gray-300 rounded-xl px-4 py-3.5 text-base outline-none focus:border-[#1877F2]"
+          className="w-full border border-gray-300 rounded-xl px-4 py-3.5 text-base outline-none focus:border-[#1877F2]"
         />
         <input
           placeholder="Last name"
           value={lastName}
           onChange={e => setLastName(e.target.value)}
-          className="flex-1 border border-gray-300 rounded-xl px-4 py-3.5 text-base outline-none focus:border-[#1877F2]"
+          className="w-full border border-gray-300 rounded-xl px-4 py-3.5 text-base outline-none focus:border-[#1877F2]"
         />
       </div>
 
