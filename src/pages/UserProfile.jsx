@@ -19,7 +19,7 @@ const PROFILE_THEMES = [
 export default function UserProfile() {
   const navigate = useNavigate();
   const { userId } = useParams();
-  const { getUserById, currentUser, followUser, isFollowing } = useFBAuth();
+  const { getUserById, currentUser, followUser, isFollowing, getAllUsers } = useFBAuth();
   const [localFollowing, setLocalFollowing] = useState(null);
   const [activeTab, setActiveTab] = useState("All");
 
@@ -31,8 +31,11 @@ export default function UserProfile() {
   };
 
   const user = getUserById(userId);
+  const allUsers = getAllUsers ? getAllUsers() : [];
+  const fallbackUser = allUsers.find(u => u.id === userId);
+  const actualUser = user || fallbackUser;
 
-  if (!user) {
+  if (!actualUser) {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center max-w-md mx-auto">
         <div className="text-5xl mb-4">👤</div>
@@ -42,24 +45,24 @@ export default function UserProfile() {
     );
   }
 
-  const isOwnProfile = currentUser?.id === user.id;
-  const fullName = `${user.firstName} ${user.lastName}`;
-  const birthday = user.birthday ? new Date(user.birthday) : null;
+  const isOwnProfile = currentUser?.id === actualUser.id;
+  const fullName = `${actualUser.firstName} ${actualUser.lastName}`;
+  const birthday = actualUser.birthday ? new Date(actualUser.birthday) : null;
 
   // Pick a unique theme based on user id hash
-  const idNum = user.id?.startsWith("feed_")
-    ? parseInt(user.id.replace("feed_", ""), 10)
-    : parseInt(user.id?.slice(-3) || "0", 10) || 0;
+  const idNum = actualUser.id?.startsWith("feed_")
+    ? parseInt(actualUser.id.replace("feed_", ""), 10)
+    : parseInt(actualUser.id?.slice(-3) || "0", 10) || 0;
   const themeIdx = (idNum || 0) % PROFILE_THEMES.length;
   const theme = PROFILE_THEMES[themeIdx];
 
   // Use the user's own bio/category/location if available
-  const displayCategory = user.category || theme.category;
-  const displayBio = user.bio || theme.bio;
-  const displayLocation = user.location || null;
+  const displayCategory = actualUser.category || theme.category;
+  const displayBio = actualUser.bio || theme.bio;
+  const displayLocation = actualUser.location || null;
 
   // Use posts from the feed that belong to this user
-  const userPosts = FEED_POSTS.filter(p => p.authorId === user.id);
+  const userPosts = FEED_POSTS.filter(p => p.authorId === actualUser.id);
   const displayPosts = userPosts.length ? userPosts : FEED_POSTS.slice(themeIdx, themeIdx + 3);
 
   const formatCount = (n) => {
@@ -88,44 +91,44 @@ export default function UserProfile() {
 
       {/* Cover photo */}
       <div className={`w-full h-52 bg-gradient-to-br ${theme.cover} -mt-14`}>
-        {user.profilePicture && (
-          <img src={user.profilePicture} alt="cover" className="w-full h-full object-cover opacity-50" />
+        {actualUser.profilePicture && (
+          <img src={actualUser.profilePicture} alt="cover" className="w-full h-full object-cover opacity-50" />
         )}
       </div>
 
       {/* Profile card — white card overlapping cover */}
       <div className="bg-white mx-0 rounded-t-3xl -mt-6 px-4 pt-4 pb-0 shadow-sm">
         <div className="flex items-start gap-4 mb-3">
-          {/* Avatar with colored ring */}
-          <div className={`w-20 h-20 rounded-full border-4 border-white ring-4 ${theme.ring} overflow-hidden bg-gray-300 shadow-lg flex-shrink-0 -mt-14`}>
-            {user.profilePicture ? (
-              <img src={user.profilePicture} alt={fullName} className="w-full h-full object-cover" />
+           {/* Avatar with colored ring */}
+           <div className={`w-20 h-20 rounded-full border-4 border-white ring-4 ${theme.ring} overflow-hidden bg-gray-300 shadow-lg flex-shrink-0 -mt-14`}>
+            {actualUser.profilePicture ? (
+              <img src={actualUser.profilePicture} alt={fullName} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full bg-[#1877F2] flex items-center justify-center">
-                <span className="text-white text-3xl font-bold">{user.firstName?.[0]}</span>
+                <span className="text-white text-3xl font-bold">{actualUser.firstName?.[0]}</span>
               </div>
             )}
-          </div>
+           </div>
 
-          {/* Name & stats */}
-          <div className="flex-1 pt-1">
-            <div className="flex items-center gap-1.5">
-              <h1 className="text-lg font-bold text-gray-900 leading-tight">{fullName}</h1>
-              {user.is_verified && <VerifiedBadge size={20} />}
-            </div>
-            {user.username && (
-              <p className="text-xs text-[#1877F2] font-medium">@{user.username}</p>
-            )}
-            <p className="text-sm text-gray-800 mt-1">
-              <span className="font-bold">{formatCount(user.followers)}</span>
-              <span className="text-gray-500"> followers · </span>
-              <span className="font-bold">{formatCount(user.following)}</span>
-              <span className="text-gray-500"> following · </span>
-              <span className="font-bold">{formatCount(user.likes || 0)}</span>
-              <span className="text-gray-500"> posts</span>
-            </p>
-          </div>
-        </div>
+           {/* Name & stats */}
+           <div className="flex-1 pt-1">
+             <div className="flex items-center gap-1.5">
+               <h1 className="text-lg font-bold text-gray-900 leading-tight">{fullName}</h1>
+               {actualUser.is_verified && <VerifiedBadge size={20} />}
+             </div>
+             {actualUser.username && (
+               <p className="text-xs text-[#1877F2] font-medium">@{actualUser.username}</p>
+             )}
+             <p className="text-sm text-gray-800 mt-1">
+               <span className="font-bold">{formatCount(actualUser.followers)}</span>
+               <span className="text-gray-500"> followers · </span>
+               <span className="font-bold">{formatCount(actualUser.following)}</span>
+               <span className="text-gray-500"> following · </span>
+               <span className="font-bold">{formatCount(actualUser.likes || 0)}</span>
+               <span className="text-gray-500"> posts</span>
+             </p>
+           </div>
+         </div>
 
         {/* Page type & bio */}
         <p className="text-xs text-gray-400 mb-1">Page · {displayCategory}</p>
@@ -166,7 +169,7 @@ export default function UserProfile() {
               )}
             </button>
             <button
-              onClick={() => navigate("/messages", { state: { startChatWith: user } })}
+              onClick={() => navigate("/messages", { state: { startChatWith: actualUser } })}
               className="flex-1 bg-gray-100 text-gray-800 font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 text-sm"
             >
               <MessageCircle className="w-4 h-4" /> Message
@@ -247,12 +250,12 @@ export default function UserProfile() {
           </div>
           <span className="text-gray-700 text-sm">Always open</span>
         </div>
-        {user.gender && (
+        {actualUser.gender && (
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 border border-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
               <span className="text-base">👤</span>
             </div>
-            <span className="text-gray-700 text-sm capitalize">{user.gender}</span>
+            <span className="text-gray-700 text-sm capitalize">{actualUser.gender}</span>
           </div>
         )}
       </div>
@@ -265,14 +268,14 @@ export default function UserProfile() {
             <Link2 className="w-4 h-4 text-gray-500" />
           </div>
           <span className="text-[#1877F2] text-sm">{fullName.replace(" ", "")}'s Page</span>
-        </div>
-        <h2 className="font-bold text-base text-gray-900 mb-3">Contact info</h2>
-        <div className="flex items-center gap-3 mb-3">
+          </div>
+          <h2 className="font-bold text-base text-gray-900 mb-3">Contact info</h2>
+          <div className="flex items-center gap-3 mb-3">
           <div className="w-8 h-8 border border-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
             <Mail className="w-4 h-4 text-gray-500" />
           </div>
-          <span className="text-gray-700 text-sm">{user.emailAddress || `${user.firstName?.toLowerCase()}@example.com`}</span>
-        </div>
+          <span className="text-gray-700 text-sm">{actualUser.emailAddress || `${actualUser.firstName?.toLowerCase()}@example.com`}</span>
+          </div>
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 border border-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
             <MessageCircle className="w-4 h-4 text-gray-500" />
@@ -291,8 +294,8 @@ export default function UserProfile() {
           key={post.id}
           post={post}
           authorName={fullName}
-          authorAvatar={user.profilePicture}
-          authorVerified={user.is_verified}
+          authorAvatar={actualUser.profilePicture}
+          authorVerified={actualUser.is_verified}
         />
       ))}
 
