@@ -46,6 +46,12 @@ export default function CreatePost({ onClose, onPost }) {
       verified: currentUser?.is_verified || false,
     };
     setUploading(false);
+    // Save to localStorage so it shows on profile
+    try {
+      const stored = JSON.parse(localStorage.getItem("fb_user_posts") || "[]");
+      stored.unshift(newPost);
+      localStorage.setItem("fb_user_posts", JSON.stringify(stored.slice(0, 200)));
+    } catch {}
     if (onPost) onPost(newPost);
     if (onClose) onClose();
   };

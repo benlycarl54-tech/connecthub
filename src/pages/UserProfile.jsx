@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ChevronLeft, Search, MoreHorizontal, UserPlus, MessageCircle, Bell, Link2, MapPin, Star, DollarSign, Clock, Mail } from "lucide-react";
+import { ChevronLeft, Search, MoreHorizontal, UserPlus, MessageCircle, Link2, MapPin, Star, Clock, Mail } from "lucide-react";
+import VerifiedBadge from "@/components/VerifiedBadge";
 import { useFBAuth } from "@/context/AuthContext";
 import { format } from "date-fns";
 import { FEED_POSTS } from "@/data/feedPosts";
@@ -103,11 +104,7 @@ export default function UserProfile() {
           <div className="flex-1 pt-1">
             <div className="flex items-center gap-1.5">
               <h1 className="text-lg font-bold text-gray-900 leading-tight">{fullName}</h1>
-              {user.is_verified && (
-                <div className="w-5 h-5 bg-[#1877F2] rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-white text-[10px] font-bold">✓</span>
-                </div>
-              )}
+              {user.is_verified && <VerifiedBadge size={20} />}
             </div>
             <p className="text-xs text-gray-500 mt-0.5">
               {formatCount(user.followers)} followers · {formatCount(user.following)} following · {formatCount(user.likes || 0)} likes

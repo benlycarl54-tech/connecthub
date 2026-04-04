@@ -32,7 +32,7 @@ function EditUserModal({ user, onClose, onSave }) {
           </div>
           <div>
             <p className="font-semibold text-gray-900">{user.firstName} {user.lastName}</p>
-            <p className="text-xs text-gray-500">{user.emailAddress || user.mobileNumber}</p>
+            <p className="text-xs text-gray-500">{user.emailAddress ? user.emailAddress.replace(/(.{2}).*(@.*)/, "$1***$2") : user.mobileNumber ? "****" + user.mobileNumber.slice(-4) : ""}</p>
           </div>
         </div>
 
@@ -214,7 +214,9 @@ export default function AdminPanel() {
                       <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-semibold">ADMIN</span>
                     )}
                   </div>
-                  <p className="text-xs text-gray-500 truncate">{user.emailAddress || user.mobileNumber}</p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {user.emailAddress ? user.emailAddress.replace(/(.{2}).*(@.*)/, "$1***$2") : user.mobileNumber ? user.mobileNumber.replace(/.(?=.{4})/g, "*") : "No contact"}
+                  </p>
                   <div className="flex gap-3 mt-1">
                     <span className="text-xs text-gray-500">👥 {user.followers || 0}</span>
                     <span className="text-xs text-gray-500">➡️ {user.following || 0}</span>

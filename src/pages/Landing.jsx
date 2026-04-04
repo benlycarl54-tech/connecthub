@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useFBAuth } from "@/context/AuthContext";
 
@@ -7,7 +7,12 @@ export default function Landing() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const { login } = useFBAuth();
+  const { login, currentUser } = useFBAuth();
+
+  // If already logged in, auto-redirect to home
+  useEffect(() => {
+    if (currentUser) navigate("/home");
+  }, [currentUser]);
 
   const handleLogin = (e) => {
     e.preventDefault();

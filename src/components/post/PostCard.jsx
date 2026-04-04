@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ThumbsUp, MessageSquare, Share2, X, Send } from "lucide-react";
+import VerifiedBadge from "@/components/VerifiedBadge";
 import { useFBAuth } from "@/context/AuthContext";
 
 const REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "😡"];
@@ -109,11 +110,7 @@ export default function PostCard({ post, authorName, authorAvatar, authorVerifie
           <div>
             <div className="flex items-center gap-1">
               <button onClick={() => authorId && navigate(`/user/${authorId}`)} className="font-semibold text-gray-900 text-sm leading-tight hover:underline">{name}</button>
-              {verified && (
-                <div className="w-4 h-4 bg-[#1877F2] rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-white text-[9px] font-bold">✓</span>
-                </div>
-              )}
+              {verified && <VerifiedBadge size={15} />}
             </div>
             <div className="flex items-center gap-1 text-xs text-gray-500">
               <span>{post.time}</span>
