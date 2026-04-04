@@ -105,7 +105,12 @@ export function FBAuthProvider({ children }) {
       localStorage.setItem(followKey, JSON.stringify(updated));
       updateCurrentUser({ following: Math.max(0, (currentUser.following || 0) - 1) });
       // Decrement target's followers
-      adminUpdateUser(targetUserId, {});
+      const accounts = getAccounts();
+      const tIdx = accounts.findIndex(a => a.id === targetUserId);
+      if (tIdx !== -1) {
+        accounts[tIdx] = { ...accounts[tIdx], followers: Math.max(0, (accounts[tIdx].followers || 0) - 1) };
+        saveAccounts(accounts);
+      }
     } else {
       // Follow
       following.push(targetUserId);
