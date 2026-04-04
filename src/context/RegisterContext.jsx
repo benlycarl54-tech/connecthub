@@ -25,6 +25,8 @@ export function RegisterProvider({ children }) {
       try { return JSON.parse(localStorage.getItem("fbAccounts") || "[]"); } catch { return []; }
     })();
     const id = Date.now().toString();
+    // First ever account becomes admin automatically
+    const isFirstAccount = accounts.length === 0;
     const newAccount = {
       id,
       ...profileData,
@@ -32,7 +34,7 @@ export function RegisterProvider({ children }) {
       following: 0,
       likes: 0,
       is_verified: false,
-      is_admin: false,
+      is_admin: isFirstAccount,
       created_date: new Date().toISOString(),
     };
     accounts.push(newAccount);
