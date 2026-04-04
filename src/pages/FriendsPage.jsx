@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { Search, UserPlus, Check, X } from "lucide-react";
-import { useFBAuth } from "../context/AuthContext";
+import { useFBAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import BottomTabBar from "../components/home/BottomTabBar";
+import BottomTabBar from "@/components/home/BottomTabBar";
 
 const SUGGESTED = [
   { id: "s1", name: "Amara Johnson", mutual: 3, bg: "bg-pink-400" },
