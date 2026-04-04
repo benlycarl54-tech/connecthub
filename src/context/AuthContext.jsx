@@ -69,13 +69,24 @@ export function FBAuthProvider({ children }) {
 
   const login = (identifier, password) => {
     const accounts = getAccounts();
-    const user = accounts.find(a =>
-      (a.emailAddress === identifier || a.mobileNumber === identifier) && a.password === password
+    const accountExists = accounts.find(a =>
+      (a.emailAddress === identifier || a.mobileNumber === identifier)
     );
-    if (!user) return { success: false, error: "No account found with these credentials. Please create an account first." };
-    if (user.is_banned) return { success: false, error: "This account has been suspended. Please contact support." };
-    localStorage.setItem("fbCurrentUser", JSON.stringify(user));
-    setCurrentUser(user);
+    
+    if (!accountExists) {
+      return { success: false, error: "No account found with this email or mobile number. Please create an account." };
+    }
+    
+    if (accountExists.password !== password) {
+      return { success: false, error: "Incorrect password. Please try again." };
+    }
+    
+    if (accountExists.is_banned) {
+      return { success: false, error: "This account has been suspended. Please contact support." };
+    }
+    
+    localStorage.setItem("fbCurrentUser", JSON.stringify(accountExists));
+    setCurrentUser(accountExists);
     return { success: true };
   };
 
