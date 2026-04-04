@@ -1,15 +1,31 @@
-// Facebook-style verified badge — blue jagged circle with white checkmark
+// Exact Facebook verified badge — blue jagged seal with bold white checkmark
 export default function VerifiedBadge({ size = 18 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="inline-block flex-shrink-0">
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 40 40"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="inline-block flex-shrink-0"
+    >
+      {/* Jagged badge shape exactly like Facebook */}
       <path
-        d="M12 2L13.9 3.8L16.5 3.2L17.8 5.5L20.4 6.2L20.5 8.9L22.5 10.7L21.5 13.2L22.5 15.7L20.5 17.5L20.4 20.2L17.8 20.9L16.5 23.2L13.9 22.6L12 24.4L10.1 22.6L7.5 23.2L6.2 20.9L3.6 20.2L3.5 17.5L1.5 15.7L2.5 13.2L1.5 10.7L3.5 8.9L3.6 6.2L6.2 5.5L7.5 3.2L10.1 3.8L12 2Z"
+        d="M20 2
+           L23.5 5.2 L27.8 4 L30 7.8 L34.4 8.4 L34.8 12.8
+           L38 15.5 L36.6 19.8 L38.8 23.8 L36 26.9
+           L36.8 31.3 L32.6 33.2 L31.4 37.5 L27 37.6
+           L24 40.4 L20 38.8 L16 40.4 L13 37.6
+           L8.6 37.5 L7.4 33.2 L3.2 31.3 L4 26.9
+           L1.2 23.8 L3.4 19.8 L2 15.5 L5.2 12.8
+           L5.6 8.4 L10 7.8 L12.2 4 L16.5 5.2 Z"
         fill="#0866FF"
       />
+      {/* White bold checkmark */}
       <path
-        d="M8 12.5L10.5 15L16 9"
+        d="M12 21L17.5 27L28 14"
         stroke="white"
-        strokeWidth="2.2"
+        strokeWidth="3.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       />

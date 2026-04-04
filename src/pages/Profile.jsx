@@ -25,6 +25,7 @@ export default function Profile() {
   const [showMenu, setShowMenu] = useState(false);
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [myPosts, setMyPosts] = useState([]);
+  const [postRefresh, setPostRefresh] = useState(0);
 
   const user = currentUser || data;
   const fullName = `${user.firstName || "Your"} ${user.lastName || "Name"}`;
@@ -32,15 +33,20 @@ export default function Profile() {
   const birthday = user.birthday ? new Date(user.birthday) : null;
   const joinedYear = user.created_date ? new Date(user.created_date).getFullYear() : new Date().getFullYear();
 
-  // Load user's own posts from localStorage
+  // Load user's own posts from localStorage every time postRefresh changes
   useEffect(() => {
     if (currentUser?.id) {
       setMyPosts(getUserPosts(currentUser.id));
     }
-  }, [currentUser?.id, showCreatePost]);
+  }, [currentUser?.id, postRefresh]);
 
   const handleNewPost = (post) => {
-    setMyPosts(prev => [post, ...prev]);
+    setPostRefresh(r => r + 1);
+  };
+
+  const handleCloseCreatePost = () => {
+    setShowCreatePost(false);
+    setPostRefresh(r => r + 1);
   };
 
   const handleLogout = () => {
@@ -277,7 +283,7 @@ export default function Profile() {
         </button>
       </div>
 
-      {showCreatePost && <CreatePost onClose={() => setShowCreatePost(false)} onPost={handleNewPost} />}
+      {showCreatePost && <CreatePost onClose={handleCloseCreatePost} onPost={handleNewPost} />}
 
       <BottomTabBar />
     </div>

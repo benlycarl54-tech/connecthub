@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Search, Shield, Check, X, Edit3, Save } from "lucide-react";
 import { useFBAuth } from "@/context/AuthContext";
+import VerifiedBadge from "@/components/VerifiedBadge";
 
 function EditUserModal({ user, onClose, onSave }) {
   const [form, setForm] = useState({
@@ -68,9 +69,7 @@ function EditUserModal({ user, onClose, onSave }) {
           {/* Verified badge toggle */}
           <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-[#1877F2] rounded-full flex items-center justify-center">
-                <Check className="w-3.5 h-3.5 text-white" />
-              </div>
+              <VerifiedBadge size={24} />
               <div>
                 <p className="font-semibold text-sm text-gray-900">Verified Badge</p>
                 <p className="text-xs text-gray-500">Show blue checkmark on profile</p>
@@ -205,11 +204,7 @@ export default function AdminPanel() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
                     <p className="font-semibold text-gray-900 text-sm truncate">{user.firstName} {user.lastName}</p>
-                    {user.is_verified && (
-                      <div className="w-4 h-4 bg-[#1877F2] rounded-full flex items-center justify-center flex-shrink-0">
-                        <Check className="w-2.5 h-2.5 text-white" />
-                      </div>
-                    )}
+                    {user.is_verified && <VerifiedBadge size={16} />}
                     {user.is_admin && (
                       <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-semibold">ADMIN</span>
                     )}
