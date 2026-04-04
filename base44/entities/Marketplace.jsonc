@@ -1,0 +1,71 @@
+{
+  "name": "Marketplace",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Product title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Product description"
+    },
+    "price": {
+      "type": "number",
+      "description": "Selling price"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "Electronics",
+        "Furniture",
+        "Fashion",
+        "Books",
+        "Sports",
+        "Home",
+        "Vehicles",
+        "Other"
+      ],
+      "description": "Product category"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Product image URL"
+    },
+    "seller_id": {
+      "type": "string",
+      "description": "ID of the seller"
+    },
+    "condition": {
+      "type": "string",
+      "enum": [
+        "New",
+        "Like New",
+        "Good",
+        "Fair"
+      ],
+      "default": "Good",
+      "description": "Item condition"
+    },
+    "location": {
+      "type": "string",
+      "description": "Item location/area"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Available",
+        "Sold",
+        "Reserved"
+      ],
+      "default": "Available",
+      "description": "Listing status"
+    }
+  },
+  "required": [
+    "title",
+    "price",
+    "category",
+    "seller_id"
+  ]
+}

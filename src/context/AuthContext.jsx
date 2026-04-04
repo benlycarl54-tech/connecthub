@@ -237,6 +237,61 @@ export function FBAuthProvider({ children }) {
     return getAccounts().find(a => a.id === id) || null;
   };
 
+  // ── Marketplace Management ──────────────────────────────────────────────
+  const getMarketplaceListings = () => {
+    try { return JSON.parse(localStorage.getItem("fb_marketplace") || "[]"); } catch { return []; }
+  };
+
+  const saveMarketplaceListings = (listings) => {
+    localStorage.setItem("fb_marketplace", JSON.stringify(listings));
+  };
+
+  const createMarketplaceListing = (listingData) => {
+    if (!currentUser) return null;
+    const listings = getMarketplaceListings();
+    const id = Date.now().toString();
+    const newListing = {
+      id,
+      ...listingData,
+      created_at: new Date().toISOString(),
+      status: "Available",
+    };
+    listings.push(newListing);
+    saveMarketplaceListings(listings);
+    return newListing;
+  };
+
+  const getMarketplaceListingById = (listingId) => {
+    const listings = getMarketplaceListings();
+    return listings.find(l => l.id === listingId) || null;
+  };
+
+  const updateMarketplaceListing = (listingId, updates) => {
+    const listings = getMarketplaceListings();
+    const idx = listings.findIndex(l => l.id === listingId);
+    if (idx !== -1) {
+      listings[idx] = { ...listings[idx], ...updates };
+      saveMarketplaceListings(listings);
+      return listings[idx];
+    }
+    return null;
+  };
+
+  const createDirectMessage = (senderId, recipientId) => {
+    const conversationKey = `fb_conversation_${[senderId, recipientId].sort().join("_")}`;
+    const existing = JSON.parse(localStorage.getItem(conversationKey) || "null");
+    if (existing) return existing;
+
+    const conversation = {
+      id: conversationKey,
+      participants: [senderId, recipientId],
+      created_at: new Date().toISOString(),
+    };
+    localStorage.setItem(conversationKey, JSON.stringify(conversation));
+    return conversation;
+  };
+  // ─────────────────────────────────────────────────────────────────────
+
   // ── Album Management ──────────────────────────────────────────────
   const getAlbums = () => {
     try { return JSON.parse(localStorage.getItem("fb_albums") || "[]"); } catch { return []; }
@@ -455,6 +510,8 @@ export function FBAuthProvider({ children }) {
       getAlbumPhotos, removePhotoFromAlbum,
       createGroup, getGroupsByUser, getGroupById, getGroupMembers,
       addGroupMember, removeGroupMember, postToGroup, getGroupPosts,
+      createMarketplaceListing, getMarketplaceListings, getMarketplaceListingById,
+      updateMarketplaceListing, createDirectMessage,
     }}>
       {children}
     </FBAuthContext.Provider>
