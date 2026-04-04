@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, Search, MoreHorizontal, Camera, Pencil, Plus, ChevronDown, X, LogOut, Shield, Check, AtSign } from "lucide-react";
 import CreatePost from "./CreatePost";
@@ -33,6 +33,7 @@ export default function Profile() {
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [myPosts, setMyPosts] = useState([]);
   const [postRefresh, setPostRefresh] = useState(0);
+  const coverInputRef = useRef(null);
 
   const user = currentUser || data;
   const fullName = `${user.firstName || "Your"} ${user.lastName || "Name"}`;
@@ -67,6 +68,19 @@ export default function Profile() {
     const trimmed = usernameInput.trim().replace(/\s+/g, "").toLowerCase();
     if (trimmed) updateCurrentUser({ username: trimmed });
     setEditingUsername(false);
+  };
+
+  const handleCoverUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result;
+      if (typeof base64 === 'string') {
+        updateCurrentUser({ coverPhoto: base64 });
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   return (
@@ -109,11 +123,24 @@ export default function Profile() {
       {/* Cover + Avatar area */}
       <div className="bg-white">
         <div className="relative">
-          <div className="w-full h-36 bg-gradient-to-br from-blue-200 to-blue-400 flex items-center justify-center relative">
-            <span className="text-white/70 text-sm">Add cover photo</span>
-            <button className="absolute bottom-2 right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow">
+          <div 
+            className="w-full h-36 bg-gradient-to-br from-blue-200 to-blue-400 flex items-center justify-center relative bg-cover bg-center"
+            style={user.coverPhoto ? { backgroundImage: `url(${user.coverPhoto})`, backgroundColor: 'transparent' } : {}}
+          >
+            {!user.coverPhoto && <span className="text-white/70 text-sm">Add cover photo</span>}
+            <button 
+              onClick={() => coverInputRef.current?.click()}
+              className="absolute bottom-2 right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow hover:bg-gray-100"
+            >
               <Camera className="w-4 h-4 text-gray-700" />
             </button>
+            <input
+              ref={coverInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleCoverUpload}
+              className="hidden"
+            />
           </div>
 
           <div className="px-4 pb-3">
