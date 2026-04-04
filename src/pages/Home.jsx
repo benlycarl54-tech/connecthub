@@ -43,9 +43,11 @@ export default function Home() {
   const [liveActive, setLiveActive] = useState(false);
   const [feedPosts, setFeedPosts] = useState([]);
   const [lastPollTime, setLastPollTime] = useState(0);
+  const { getFriends } = useFBAuth();
 
   const avatar = currentUser?.profilePicture || data.profilePicture;
   const firstName = currentUser?.firstName || data.firstName || "User";
+  const friendIds = getFriends().map(f => f.id);
 
   // Poll for live state and new posts every 5s
   useEffect(() => {
@@ -58,7 +60,14 @@ export default function Home() {
         const newPosts = allPosts.filter(p => p.created_at > lastPollTime && p.authorId !== currentUser?.id);
         
         if (newPosts.length > 0) {
-          setFeedPosts(prev => [...newPosts.sort((a, b) => b.created_at - a.created_at), ...prev]);
+          const sorted = newPosts.sort((a, b) => {
+            const aIsFriend = friendIds.includes(a.authorId);
+            const bIsFriend = friendIds.includes(b.authorId);
+            if (aIsFriend && !bIsFriend) return -1;
+            if (!aIsFriend && bIsFriend) return 1;
+            return b.created_at - a.created_at;
+          });
+          setFeedPosts(prev => [...sorted, ...prev]);
           setLastPollTime(currentTime);
         }
       } catch (e) {
@@ -69,7 +78,7 @@ export default function Home() {
     pollNewPosts();
     const interval = setInterval(pollNewPosts, 5000);
     return () => clearInterval(interval);
-  }, [currentUser?.id, lastPollTime]);
+  }, [currentUser?.id, lastPollTime, friendIds]);
 
   const handleNewPost = (post) => {
     setUserPosts(prev => [post, ...prev]);

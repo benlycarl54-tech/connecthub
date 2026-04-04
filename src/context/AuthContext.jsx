@@ -153,6 +153,83 @@ export function FBAuthProvider({ children }) {
     return following.includes(targetUserId);
   };
 
+  // Friend request management
+  const sendFriendRequest = (targetUserId) => {
+    if (!currentUser || currentUser.id === targetUserId) return;
+    const requestsKey = `fb_friend_requests_${targetUserId}`;
+    const requests = JSON.parse(localStorage.getItem(requestsKey) || "[]");
+    if (!requests.includes(currentUser.id)) {
+      requests.push(currentUser.id);
+      localStorage.setItem(requestsKey, JSON.stringify(requests));
+      pushNotification(targetUserId, {
+        type: "friend_request",
+        text: `${currentUser.firstName} ${currentUser.lastName} sent you a friend request.`,
+        avatar: currentUser.profilePicture || null,
+        avatarInitial: currentUser.firstName?.[0] || "?",
+        avatarColor: "bg-[#1877F2]",
+        actorName: `${currentUser.firstName} ${currentUser.lastName}`,
+      });
+    }
+  };
+
+  const acceptFriendRequest = (senderId) => {
+    if (!currentUser) return;
+    const requestsKey = `fb_friend_requests_${currentUser.id}`;
+    const requests = JSON.parse(localStorage.getItem(requestsKey) || "[]");
+    const updated = requests.filter(id => id !== senderId);
+    localStorage.setItem(requestsKey, JSON.stringify(updated));
+    
+    const friendsKey = `fb_friends_${currentUser.id}`;
+    const friends = JSON.parse(localStorage.getItem(friendsKey) || "[]");
+    if (!friends.includes(senderId)) {
+      friends.push(senderId);
+      localStorage.setItem(friendsKey, JSON.stringify(friends));
+    }
+    
+    const senderFriendsKey = `fb_friends_${senderId}`;
+    const senderFriends = JSON.parse(localStorage.getItem(senderFriendsKey) || "[]");
+    if (!senderFriends.includes(currentUser.id)) {
+      senderFriends.push(currentUser.id);
+      localStorage.setItem(senderFriendsKey, JSON.stringify(senderFriends));
+    }
+  };
+
+  const declineFriendRequest = (senderId) => {
+    if (!currentUser) return;
+    const requestsKey = `fb_friend_requests_${currentUser.id}`;
+    const requests = JSON.parse(localStorage.getItem(requestsKey) || "[]");
+    const updated = requests.filter(id => id !== senderId);
+    localStorage.setItem(requestsKey, JSON.stringify(updated));
+  };
+
+  const getFriendRequests = () => {
+    if (!currentUser) return [];
+    const requestsKey = `fb_friend_requests_${currentUser.id}`;
+    const requests = JSON.parse(localStorage.getItem(requestsKey) || "[]");
+    return requests.map(id => getUserById(id)).filter(Boolean);
+  };
+
+  const getFriends = () => {
+    if (!currentUser) return [];
+    const friendsKey = `fb_friends_${currentUser.id}`;
+    const friends = JSON.parse(localStorage.getItem(friendsKey) || "[]");
+    return friends.map(id => getUserById(id)).filter(Boolean);
+  };
+
+  const isFriend = (userId) => {
+    if (!currentUser) return false;
+    const friendsKey = `fb_friends_${currentUser.id}`;
+    const friends = JSON.parse(localStorage.getItem(friendsKey) || "[]");
+    return friends.includes(userId);
+  };
+
+  const hasPendingRequest = (userId) => {
+    if (!currentUser) return false;
+    const requestsKey = `fb_friend_requests_${currentUser.id}`;
+    const requests = JSON.parse(localStorage.getItem(requestsKey) || "[]");
+    return requests.includes(userId);
+  };
+
   const getAllUsers = () => [...getAccounts(), ...FEED_USERS];
 
   const getUserById = (id) => {
@@ -193,6 +270,8 @@ export function FBAuthProvider({ children }) {
       currentUser, register, login, logout,
       updateCurrentUser, getAllUsers, getUserById, searchUsers,
       adminUpdateUser, followUser, isFollowing,
+      sendFriendRequest, acceptFriendRequest, declineFriendRequest,
+      getFriendRequests, getFriends, isFriend, hasPendingRequest,
     }}>
       {children}
     </FBAuthContext.Provider>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, UserPlus, Check, X } from "lucide-react";
 import { useFBAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -17,63 +17,37 @@ const SUGGESTED = [
   { id: "s10", name: "Yaw Mensah", mutual: 8, bg: "bg-rose-400" },
 ];
 
-function getRequests() {
-  try { return JSON.parse(localStorage.getItem("fb_friend_requests") || "[]"); } catch { return []; }
-}
-function saveRequests(r) { localStorage.setItem("fb_friend_requests", JSON.stringify(r)); }
-function getFriends() {
-  try { return JSON.parse(localStorage.getItem("fb_friends") || "[]"); } catch { return []; }
-}
-function saveFriends(f) { localStorage.setItem("fb_friends", JSON.stringify(f)); }
-
-function addNotification(text, avatar, bg) {
-  const notifs = JSON.parse(localStorage.getItem("fb_notifications") || "[]");
-  notifs.unshift({ id: Date.now(), text, time: "Just now", read: false, avatar, bg });
-  localStorage.setItem("fb_notifications", JSON.stringify(notifs));
-}
-
 export default function FriendsPage() {
   const navigate = useNavigate();
-  const { getAllUsers, currentUser } = useFBAuth();
+  const { getAllUsers, currentUser, getFriendRequests, getFriends: getContextFriends, sendFriendRequest, acceptFriendRequest, declineFriendRequest, getUserById } = useFBAuth();
   const [activeTab, setActiveTab] = useState("requests");
   const [added, setAdded] = useState({});
-  const [requests, setRequests] = useState(getRequests);
-  const [friends, setFriends] = useState(getFriends);
+  const [requests, setRequests] = useState([]);
+  const [friends, setFriends] = useState([]);
+
+  useEffect(() => {
+    setRequests(getFriendRequests());
+    setFriends(getContextFriends());
+  }, []);
 
   const allUsers = getAllUsers().filter(u => u.id !== currentUser?.id).slice(0, 6);
-  const incomingRequests = requests.filter(r => r.fromId !== currentUser?.id);
 
   const sendRequest = (user) => {
     const uid = user.id || user.name;
     if (added[uid]) return;
-    const name = user.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : user.name;
-    const newReqs = [...requests, { ...user, fromId: currentUser?.id, toId: uid, time: "Just now" }];
-    setRequests(newReqs);
-    saveRequests(newReqs);
+    sendFriendRequest(uid);
     setAdded(prev => ({ ...prev, [uid]: true }));
-    // Notify the target
-    addNotification(
-      `${currentUser?.firstName || "Someone"} ${currentUser?.lastName || ""} sent you a friend request.`,
-      currentUser?.profilePicture || null,
-      "bg-[#1877F2]"
-    );
   };
 
-  const acceptRequest = (req) => {
-    const name = req.firstName ? `${req.firstName} ${req.lastName || ""}`.trim() : req.name;
-    const newFriends = [...friends, req];
-    saveFriends(newFriends);
-    setFriends(newFriends);
-    const newReqs = requests.filter(r => r.id !== req.id && r.fromId !== req.fromId);
-    saveRequests(newReqs);
-    setRequests(newReqs);
-    addNotification(`You and ${name} are now friends.`, req.profilePicture || null, req.bg || "bg-blue-500");
+  const acceptRequest = (user) => {
+    acceptFriendRequest(user.id);
+    setRequests(prev => prev.filter(r => r.id !== user.id));
+    setFriends(prev => [...prev, user]);
   };
 
-  const declineRequest = (req) => {
-    const newReqs = requests.filter(r => r.id !== req.id && r.fromId !== req.fromId);
-    saveRequests(newReqs);
-    setRequests(newReqs);
+  const declineRequest = (user) => {
+    declineFriendRequest(user.id);
+    setRequests(prev => prev.filter(r => r.id !== user.id));
   };
 
   const suggestions = [...allUsers, ...SUGGESTED];
@@ -114,7 +88,7 @@ export default function FriendsPage() {
 
       {activeTab === "requests" && (
         <div className="px-4">
-          {incomingRequests.length === 0 ? (
+           {requests.length === 0 ? (
             /* Empty state — matches screenshot exactly */
             <div className="flex flex-col items-center justify-center py-16">
               {/* Blue card icon */}
@@ -137,11 +111,11 @@ export default function FriendsPage() {
             </div>
           ) : (
             <div className="py-4 space-y-4">
-              <p className="font-bold text-gray-900">Friend requests ({incomingRequests.length})</p>
-              {incomingRequests.map((req, i) => {
+              <p className="font-bold text-gray-900">Friend requests ({requests.length})</p>
+              {requests.map((req) => {
                 const name = req.firstName ? `${req.firstName} ${req.lastName || ""}`.trim() : req.name;
                 return (
-                  <div key={i} className="flex items-center gap-3">
+                  <div key={req.id} className="flex items-center gap-3">
                     <div className={`w-16 h-16 rounded-full ${req.bg || "bg-blue-500"} flex items-center justify-center flex-shrink-0 overflow-hidden`}>
                       {req.profilePicture ? <img src={req.profilePicture} className="w-full h-full object-cover" alt="" /> : (
                         <span className="text-white text-2xl font-bold">{name?.[0]}</span>
@@ -149,7 +123,7 @@ export default function FriendsPage() {
                     </div>
                     <div className="flex-1">
                       <p className="font-semibold text-gray-900 text-sm">{name}</p>
-                      <p className="text-xs text-gray-400">{req.time || "Recently"}</p>
+                      <p className="text-xs text-gray-400">Recently</p>
                       <div className="flex gap-2 mt-2">
                         <button onClick={() => acceptRequest(req)} className="flex-1 bg-[#1877F2] text-white font-semibold py-1.5 rounded-lg text-sm">Confirm</button>
                         <button onClick={() => declineRequest(req)} className="flex-1 bg-gray-100 text-gray-800 font-semibold py-1.5 rounded-lg text-sm">Delete</button>
@@ -169,6 +143,8 @@ export default function FriendsPage() {
                 const uid = user.id || user.name;
                 const name = user.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : user.name;
                 const isAdded = added[uid];
+                const isFriend = friends.some(f => f.id === user.id);
+                if (isFriend) return null;
                 return (
                   <div key={uid + i} className="flex items-center gap-3">
                     <button onClick={() => user.id && !user.id.startsWith("s") && navigate(`/user/${user.id}`)} className={`w-14 h-14 rounded-full ${user.bg || "bg-blue-500"} flex items-center justify-center flex-shrink-0 overflow-hidden`}>
@@ -209,10 +185,10 @@ export default function FriendsPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {friends.map((f, i) => {
+              {friends.map((f) => {
                 const name = f.firstName ? `${f.firstName} ${f.lastName || ""}`.trim() : f.name;
                 return (
-                  <div key={i} className="flex items-center gap-3">
+                  <div key={f.id} className="flex items-center gap-3">
                     <div className={`w-14 h-14 rounded-full ${f.bg || "bg-blue-500"} flex items-center justify-center overflow-hidden flex-shrink-0`}>
                       {f.profilePicture ? <img src={f.profilePicture} className="w-full h-full object-cover" alt="" /> : (
                         <span className="text-white text-xl font-bold">{name?.[0]}</span>
