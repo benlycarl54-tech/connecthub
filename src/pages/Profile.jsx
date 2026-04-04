@@ -365,8 +365,6 @@ export default function Profile() {
       </div>
 
       {showCreatePost && <CreatePost onClose={handleCloseCreatePost} onPost={handleNewPost} />}
-
-      <BottomTabBar />
     </div>
   );
 }
