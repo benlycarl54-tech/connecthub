@@ -20,6 +20,7 @@ import PictureStep from './pages/register/PictureStep';
 import WelcomeStep from './pages/register/WelcomeStep';
 import FriendsStep from './pages/register/FriendsStep';
 import Home from './pages/Home';
+import Profile from './pages/Profile';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -57,6 +58,7 @@ const AuthenticatedApp = () => {
         <Route path="/register/welcome" element={<WelcomeStep />} />
         <Route path="/register/friends" element={<FriendsStep />} />
         <Route path="/home" element={<Home />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="*" element={<PageNotFound />} />
       </Routes>
     </RegisterProvider>

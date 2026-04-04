@@ -1,55 +1,15 @@
 import { useState } from "react";
-import { Home as HomeIcon, Users, PlaySquare, Bell, Menu, Search, Plus, MessageCircle, X, ThumbsUp, MessageSquare, Share2, ChevronDown } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Home as HomeIcon, Users, PlaySquare, Bell, Menu, Search, Plus, MessageCircle, X, ThumbsUp, MessageSquare, Share2 } from "lucide-react";
 import { useRegister } from "../context/RegisterContext";
+import { FEED_POSTS } from "../data/feedPosts";
 
 const STORIES = [
-  { name: "Your Story", color: "bg-gray-300", emoji: "➕", isYours: true },
-  { name: "Alex J.", color: "bg-blue-400", emoji: "🏖️" },
-  { name: "Maria G.", color: "bg-pink-400", emoji: "🎂" },
-  { name: "David K.", color: "bg-green-400", emoji: "⚽" },
-  { name: "Sarah W.", color: "bg-purple-400", emoji: "🌸" },
-];
-
-const POSTS = [
-  {
-    id: 1,
-    name: "Alex Johnson",
-    initials: "AJ",
-    color: "bg-blue-400",
-    time: "2h",
-    privacy: "Friends",
-    content: "Just had the most amazing weekend trip! The views were breathtaking 🌄✨",
-    image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80",
-    likes: 47,
-    comments: 12,
-    shares: 3,
-  },
-  {
-    id: 2,
-    name: "Maria Garcia",
-    initials: "MG",
-    color: "bg-pink-400",
-    time: "4h",
-    privacy: "Public",
-    content: "Happy Friday everyone! 🎉 Hope you all have a wonderful weekend ahead. What are your plans?",
-    image: null,
-    likes: 89,
-    comments: 24,
-    shares: 7,
-  },
-  {
-    id: 3,
-    name: "David Kim",
-    initials: "DK",
-    color: "bg-green-400",
-    time: "Yesterday",
-    privacy: "Friends",
-    content: "Just finished reading an amazing book. Highly recommend it to everyone who loves adventure stories! 📚",
-    image: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=600&q=80",
-    likes: 31,
-    comments: 8,
-    shares: 2,
-  },
+  { name: "Your Story", bg: "bg-gray-300", isYours: true },
+  { name: "James W.", bg: "bg-blue-400", img: "https://media.base44.com/images/public/69d064686cc19a99ff8b2dc7/7794178bb_4a796f6c9319edce10116c468a764a72.jpg" },
+  { name: "Patricia M.", bg: "bg-pink-400", img: "https://media.base44.com/images/public/69d064686cc19a99ff8b2dc7/79630d9e5_19aa7f9a156745f518f32a27306b274b.jpg" },
+  { name: "Kevin O.", bg: "bg-teal-400", img: "https://media.base44.com/images/public/69d064686cc19a99ff8b2dc7/33f3503a9_7e0fd98ce54a822d3223901ce34c33d7.jpg" },
+  { name: "Linda S.", bg: "bg-purple-400", img: "https://media.base44.com/images/public/69d064686cc19a99ff8b2dc7/ca1e07b51_73559b69b620d54a4498159de7c42056.jpg" },
 ];
 
 function PostCard({ post }) {
@@ -62,26 +22,24 @@ function PostCard({ post }) {
   };
 
   return (
-    <div className="bg-white mb-2">
+    <div className="bg-white mb-2 shadow-sm">
       {/* Post header */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-2">
+      <div className="flex items-center justify-between px-4 pt-3 pb-2">
         <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-full ${post.color} flex items-center justify-center flex-shrink-0`}>
-            <span className="text-white font-bold text-sm">{post.initials}</span>
+          <div className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden flex-shrink-0">
+            <img src={post.avatar} alt={post.name} className="w-full h-full object-cover" />
           </div>
           <div>
             <p className="font-semibold text-gray-900 text-sm leading-tight">{post.name}</p>
             <div className="flex items-center gap-1 text-xs text-gray-500">
               <span>{post.time}</span>
               <span>·</span>
-              <span>{post.privacy === "Public" ? "🌐" : "👥"}</span>
+              <span>{post.privacy}</span>
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">
-            <span className="text-gray-500 font-bold text-lg leading-none">···</span>
-          </button>
+        <div className="flex items-center gap-1">
+          <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 font-bold text-lg">···</button>
           <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">
             <X className="w-4 h-4 text-gray-500" />
           </button>
@@ -89,20 +47,19 @@ function PostCard({ post }) {
       </div>
 
       {/* Post content */}
-      <p className="px-4 pb-3 text-sm text-gray-900 leading-relaxed">{post.content}</p>
+      {post.content && (
+        <p className="px-4 pb-2 text-sm text-gray-900 leading-relaxed">{post.content}</p>
+      )}
 
       {/* Post image */}
       {post.image && (
-        <img src={post.image} alt="post" className="w-full object-cover max-h-72" />
+        <img src={post.image} alt="post" className="w-full object-cover" style={{maxHeight: 360}} />
       )}
 
       {/* Reaction summary */}
-      <div className="px-4 py-2 flex items-center justify-between border-b border-gray-100">
+      <div className="px-4 py-2 flex items-center justify-between">
         <div className="flex items-center gap-1">
-          <div className="flex -space-x-1">
-            <span className="text-base">👍</span>
-            <span className="text-base">❤️</span>
-          </div>
+          <span className="text-sm">{post.reactions}</span>
           <span className="text-xs text-gray-500 ml-1">{likesCount}</span>
         </div>
         <div className="text-xs text-gray-500">
@@ -110,20 +67,23 @@ function PostCard({ post }) {
         </div>
       </div>
 
+      {/* Divider */}
+      <div className="mx-4 border-t border-gray-100" />
+
       {/* Action buttons */}
-      <div className="flex px-2 py-1">
+      <div className="flex px-1 py-1">
         <button
           onClick={toggleLike}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-gray-100 transition-colors ${liked ? "text-[#1877F2]" : "text-gray-500"}`}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg hover:bg-gray-100 transition-colors ${liked ? "text-[#1877F2]" : "text-gray-500"}`}
         >
           <ThumbsUp className={`w-5 h-5 ${liked ? "fill-[#1877F2] text-[#1877F2]" : ""}`} />
           <span className="text-sm font-semibold">Like</span>
         </button>
-        <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
+        <button className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
           <MessageSquare className="w-5 h-5" />
           <span className="text-sm font-semibold">Comment</span>
         </button>
-        <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
+        <button className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
           <Share2 className="w-5 h-5" />
           <span className="text-sm font-semibold">Share</span>
         </button>
@@ -133,6 +93,7 @@ function PostCard({ post }) {
 }
 
 export default function Home() {
+  const navigate = useNavigate();
   const { data } = useRegister();
   const [activeTab, setActiveTab] = useState(0);
   const [showFriendsBanner, setShowFriendsBanner] = useState(true);
@@ -140,13 +101,7 @@ export default function Home() {
   const avatar = data.profilePicture;
   const firstName = data.firstName || "User";
 
-  const tabs = [
-    { icon: HomeIcon },
-    { icon: Users },
-    { icon: PlaySquare },
-    { icon: Bell },
-    { icon: Menu },
-  ];
+  const tabs = [HomeIcon, Users, PlaySquare, Bell, Menu];
 
   return (
     <div className="min-h-screen bg-[#F0F2F5] max-w-md mx-auto">
@@ -171,7 +126,7 @@ export default function Home() {
 
         {/* Tab bar */}
         <div className="flex">
-          {tabs.map(({ icon: Icon }, i) => (
+          {tabs.map((Icon, i) => (
             <button
               key={i}
               onClick={() => setActiveTab(i)}
@@ -188,31 +143,31 @@ export default function Home() {
       {/* Feed */}
       <div className="pb-4">
         {/* Create Post Bar */}
-        <div className="bg-white mb-2 px-4 py-3 border-b border-gray-200">
+        <div className="bg-white mb-2 px-4 py-3 shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden flex-shrink-0">
+            <button onClick={() => navigate("/profile")} className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden flex-shrink-0">
               {avatar ? (
                 <img src={avatar} alt="avatar" className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-[#1877F2]">
+                <div className="w-full h-full bg-[#1877F2] flex items-center justify-center">
                   <span className="text-white text-sm font-bold">{firstName[0]?.toUpperCase()}</span>
                 </div>
               )}
-            </div>
-            <button className="flex-1 bg-gray-100 rounded-full px-4 py-2.5 text-gray-400 text-left text-sm border border-gray-200 hover:bg-gray-200 transition-colors">
+            </button>
+            <button className="flex-1 bg-gray-100 rounded-full px-4 py-2.5 text-left text-gray-400 text-sm border border-gray-200">
               What's on your mind, {firstName}?
             </button>
           </div>
           <div className="flex mt-3 pt-2 border-t border-gray-100">
-            <button className="flex-1 flex items-center justify-center gap-2 py-1.5 rounded-lg hover:bg-gray-100 text-gray-600">
+            <button className="flex-1 flex items-center justify-center gap-2 py-1.5 rounded-lg hover:bg-gray-100">
               <span className="text-red-400">📹</span>
               <span className="text-sm font-semibold text-gray-600">Live</span>
             </button>
-            <button className="flex-1 flex items-center justify-center gap-2 py-1.5 rounded-lg hover:bg-gray-100 text-gray-600">
-              <span className="text-green-400">🖼️</span>
+            <button className="flex-1 flex items-center justify-center gap-2 py-1.5 rounded-lg hover:bg-gray-100">
+              <span className="text-green-500">🖼️</span>
               <span className="text-sm font-semibold text-gray-600">Photo</span>
             </button>
-            <button className="flex-1 flex items-center justify-center gap-2 py-1.5 rounded-lg hover:bg-gray-100 text-gray-600">
+            <button className="flex-1 flex items-center justify-center gap-2 py-1.5 rounded-lg hover:bg-gray-100">
               <span className="text-yellow-400">😊</span>
               <span className="text-sm font-semibold text-gray-600">Feeling</span>
             </button>
@@ -220,17 +175,23 @@ export default function Home() {
         </div>
 
         {/* Stories */}
-        <div className="bg-white mb-2 px-3 py-3">
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        <div className="bg-white mb-2 px-3 py-3 shadow-sm">
+          <div className="flex gap-2 overflow-x-auto pb-1">
             {STORIES.map((s, i) => (
-              <div key={i} className="flex-shrink-0 flex flex-col items-center" style={{width: 96}}>
-                <div className={`w-24 h-36 rounded-xl ${s.color} flex flex-col items-end justify-between p-2 relative overflow-hidden cursor-pointer`}>
-                  {s.isYours ? (
-                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-8 h-8 bg-[#1877F2] rounded-full border-2 border-white flex items-center justify-center">
-                      <Plus className="w-4 h-4 text-white" />
+              <div key={i} className="flex-shrink-0 flex flex-col items-center w-24">
+                <div className={`w-24 h-36 rounded-xl overflow-hidden relative cursor-pointer ${s.bg}`}>
+                  {s.img && <img src={s.img} alt={s.name} className="w-full h-full object-cover" />}
+                  {s.isYours && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-end pb-2 bg-gradient-to-t from-black/20 to-transparent">
+                      <div className="w-8 h-8 bg-[#1877F2] rounded-full border-2 border-white flex items-center justify-center mb-1">
+                        <Plus className="w-4 h-4 text-white" />
+                      </div>
                     </div>
-                  ) : (
-                    <span className="text-3xl absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">{s.emoji}</span>
+                  )}
+                  {!s.isYours && (
+                    <div className="absolute top-2 left-2 w-8 h-8 rounded-full border-3 border-[#1877F2] overflow-hidden border-2">
+                      <img src={s.img} alt={s.name} className="w-full h-full object-cover" />
+                    </div>
                   )}
                 </div>
                 <p className="text-xs font-semibold text-gray-700 text-center mt-1 truncate w-full">{s.name}</p>
@@ -238,7 +199,6 @@ export default function Home() {
             ))}
           </div>
 
-          {/* Friends banner */}
           {showFriendsBanner && (
             <div className="mt-3 border border-gray-200 rounded-xl p-3 relative">
               <button onClick={() => setShowFriendsBanner(false)} className="absolute top-2 right-2">
@@ -252,7 +212,7 @@ export default function Home() {
         </div>
 
         {/* Posts */}
-        {POSTS.map(post => (
+        {FEED_POSTS.map(post => (
           <PostCard key={post.id} post={post} />
         ))}
       </div>
