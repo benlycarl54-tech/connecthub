@@ -116,7 +116,7 @@ export default function AdminPanel() {
   const [editingUser, setEditingUser] = useState(null);
   const [saved, setSaved] = useState(false);
 
-  if (!currentUser?.is_admin) {
+  if (!currentUser?.is_admin && currentUser?.role !== 'admin') {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center max-w-md mx-auto px-6">
         <Shield className="w-16 h-16 text-gray-300 mb-4" />
