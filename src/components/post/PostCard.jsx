@@ -30,7 +30,13 @@ export default function PostCard({ post, authorName, authorAvatar, authorVerifie
   const { currentUser } = useFBAuth();
   const navigate = useNavigate();
   const [reaction, setReaction] = useState(null);
-  const [likesCount, setLikesCount] = useState(post.likes || 0);
+  const [likesCount, setLikesCount] = useState(() => {
+    const saved = localStorage.getItem(`post_likes_${post.id}`);
+    return saved ? parseInt(saved) : (post.likes || 0);
+  });
+  const [userLiked, setUserLiked] = useState(() => {
+    return JSON.parse(localStorage.getItem(`post_liked_by_${post.id}`) || '[]').includes(currentUser?.id);
+  });
   const [showReactions, setShowReactions] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState(() => getInitialComments(post.id, post.comments || 0));
@@ -83,14 +89,29 @@ export default function PostCard({ post, authorName, authorAvatar, authorVerifie
 
   const toggleLike = () => {
     if (showReactions) { setShowReactions(false); return; }
-    if (reaction) {
-      setReaction(null);
+    const likedKey = `post_liked_by_${post.id}`;
+    const likedUsers = JSON.parse(localStorage.getItem(likedKey) || '[]');
+    const userId = currentUser?.id;
+
+    if (userLiked) {
+      setUserLiked(false);
       setLikesCount(l => l - 1);
+      const updated = likedUsers.filter(id => id !== userId);
+      localStorage.setItem(likedKey, JSON.stringify(updated));
+      localStorage.setItem(`post_likes_${post.id}`, (likesCount - 1).toString());
     } else {
-      setReaction("👍");
+      setUserLiked(true);
       setLikesCount(l => l + 1);
-      sendReactionNotif("👍");
+      if (userId && !likedUsers.includes(userId)) {
+        likedUsers.push(userId);
+        localStorage.setItem(likedKey, JSON.stringify(likedUsers));
+      }
+      localStorage.setItem(`post_likes_${post.id}`, (likesCount + 1).toString());
+      if (authorId && authorId !== userId && !authorId.startsWith("feed_")) {
+        sendReactionNotif("❤️");
+      }
     }
+    setReaction(userLiked ? null : "👍");
   };
 
   const submitComment = () => {
@@ -247,19 +268,15 @@ export default function PostCard({ post, authorName, authorAvatar, authorVerifie
         )}
 
         <button
-          onMouseDown={handleReactionHoldStart}
-          onMouseUp={handleReactionHoldEnd}
-          onTouchStart={handleReactionHoldStart}
-          onTouchEnd={handleReactionHoldEnd}
           onClick={toggleLike}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg hover:bg-gray-100 transition-colors ${reaction ? "text-[#1877F2]" : "text-gray-500"}`}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg hover:bg-gray-100 transition-colors ${userLiked ? "text-red-500" : "text-gray-500"}`}
         >
-          {reaction ? (
-            <span className="text-base">{reaction}</span>
+          {userLiked ? (
+            <span className="text-base">❤️</span>
           ) : (
             <ThumbsUp className="w-5 h-5" />
           )}
-          <span className="text-sm font-semibold">{reaction || "Like"}</span>
+          <span className="text-sm font-semibold">{userLiked ? "Liked" : "Like"}</span>
         </button>
 
         <button
