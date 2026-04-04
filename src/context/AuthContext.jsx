@@ -162,12 +162,13 @@ export function FBAuthProvider({ children }) {
 
   const searchUsers = (query) => {
     if (!query.trim()) return [];
-    const q = query.toLowerCase();
-    const accountMatches = getAccounts().filter(a =>
-      `${a.firstName} ${a.lastName}`.toLowerCase().includes(q) ||
-      a.emailAddress?.toLowerCase().includes(q) ||
-      (a.username && a.username.toLowerCase().includes(q))
-    );
+    const q = query.toLowerCase().trim();
+    const accountMatches = getAccounts().filter(a => {
+      const fullName = `${a.firstName || ""} ${a.lastName || ""}`.toLowerCase();
+      const email = (a.emailAddress || "").toLowerCase();
+      const username = (a.username || "").toLowerCase();
+      return fullName.includes(q) || email.includes(q) || username.includes(q);
+    });
     const feedMatches = FEED_USERS.filter(u =>
       `${u.firstName} ${u.lastName}`.toLowerCase().includes(q)
     );
