@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Search, MoreHorizontal } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import BottomTabBar from "../components/home/BottomTabBar";
+
 import { useFBAuth } from "@/context/AuthContext";
 import { loadNotificationsForUser, markAllRead } from "@/context/AuthContext";
 
@@ -83,8 +83,6 @@ export default function NotificationsPage() {
           </div>
         )}
       </div>
-
-      <BottomTabBar />
     </div>
   );
 }

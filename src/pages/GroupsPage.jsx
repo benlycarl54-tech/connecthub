@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Search, Plus, ChevronLeft, Users, Lock, Globe } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useFBAuth } from "@/context/AuthContext";
-import BottomTabBar from "@/components/home/BottomTabBar";
+
 import CreateGroupModal from "@/components/groups/CreateGroupModal";
 
 export default function GroupsPage() {
@@ -114,8 +114,6 @@ export default function GroupsPage() {
           onGroupCreated={handleGroupCreated}
         />
       )}
-
-      <BottomTabBar />
     </div>
   );
 }

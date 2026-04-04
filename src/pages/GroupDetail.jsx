@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ChevronLeft, Users, Settings, UserPlus, MessageSquare } from "lucide-react";
 import { useFBAuth } from "@/context/AuthContext";
 import PostCard from "@/components/post/PostCard";
-import BottomTabBar from "@/components/home/BottomTabBar";
+
 import CreateGroupPostModal from "@/components/groups/CreateGroupPostModal";
 
 export default function GroupDetail() {
@@ -174,8 +174,6 @@ export default function GroupDetail() {
           onPostCreated={handlePostCreated}
         />
       )}
-
-      <BottomTabBar />
     </div>
   );
 }

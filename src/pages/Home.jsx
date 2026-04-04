@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Home as HomeIcon, Users, PlaySquare, Bell, Menu, Search, Plus, MessageCircle, Shield, X, Radio } from "lucide-react";
+import { Home as HomeIcon, Users, PlaySquare, Bell, Menu, Search, Plus, MessageCircle, Shield, X } from "lucide-react";
 import { useRegister } from "../context/RegisterContext";
 import { useFBAuth } from "../context/AuthContext";
 import { FEED_POSTS } from "../data/feedPosts";
 import PostCard from "../components/post/PostCard";
 import CreatePost from "./CreatePost";
-import BottomTabBar from "../components/home/BottomTabBar";
+import MenuDrawer from "../components/MenuDrawer";
 
 // Interleave video posts (id >= 101) every 2 regular posts for a natural feed mix
 const REGULAR_POSTS = FEED_POSTS.filter(p => p.id < 101);
@@ -36,13 +36,13 @@ export default function Home() {
   const navigate = useNavigate();
   const { data } = useRegister();
   const { currentUser } = useFBAuth();
-  const [activeTab, setActiveTab] = useState(0);
   const [showFriendsBanner, setShowFriendsBanner] = useState(true);
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [userPosts, setUserPosts] = useState([]);
   const [liveActive, setLiveActive] = useState(false);
   const [feedPosts, setFeedPosts] = useState([]);
   const [lastPollTime, setLastPollTime] = useState(0);
+  const [showMenu, setShowMenu] = useState(false);
   const { getFriends } = useFBAuth();
 
   const avatar = currentUser?.profilePicture || data.profilePicture;
@@ -92,14 +92,6 @@ export default function Home() {
     navigate("/story-viewer", { state: { stories: allStories, startIndex } });
   };
 
-  const tabs = [
-    { Icon: HomeIcon, path: null },
-    { Icon: Users, path: "/friends" },
-    { Icon: PlaySquare, path: "/videos" },
-    { Icon: Bell, path: "/notifications" },
-    { Icon: Menu, path: "/profile" },
-  ];
-
   const [notifCount, setNotifCount] = useState(() => {
     try {
       const uid = currentUser?.id;
@@ -112,43 +104,50 @@ export default function Home() {
     <div className="min-h-screen bg-[#F0F2F5] max-w-md mx-auto">
       {/* Header */}
       <header className="bg-white shadow-sm sticky top-0 z-40">
-        <div className="flex items-center justify-between px-3 pt-2 pb-1">
-          <span className="text-[#1877F2] font-bold text-2xl" style={{ fontFamily: "Georgia, serif" }}>
-            facebook
-          </span>
+        <div className="flex items-center justify-between px-3 pt-3 pb-3">
+          <div className="flex items-center gap-2">
+            <button onClick={() => setShowMenu(true)} className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200">
+              <Menu className="w-5 h-5 text-gray-800" />
+            </button>
+            <span className="text-[#1877F2] font-bold text-2xl" style={{ fontFamily: "Georgia, serif" }}>
+              facebook
+            </span>
+          </div>
           <div className="flex items-center gap-1.5">
+            <button onClick={() => navigate("/search")} className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200">
+              <Plus className="w-5 h-5 text-gray-800" />
+            </button>
             <button onClick={() => navigate("/search")} className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200">
               <Search className="w-5 h-5 text-gray-800" />
             </button>
-            {currentUser?.is_admin && (
-              <button onClick={() => navigate("/admin")} className="w-9 h-9 bg-[#1877F2] rounded-full flex items-center justify-center hover:bg-[#166FE5]">
-                <Shield className="w-4 h-4 text-white" />
-              </button>
-            )}
-            <button onClick={() => navigate("/messages")} className="w-9 h-9 bg-gray-800 rounded-full flex items-center justify-center hover:bg-gray-700 relative">
-              <MessageCircle className="w-5 h-5 text-white" />
+            <button onClick={() => navigate("/messages")} className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 relative">
+              <MessageCircle className="w-5 h-5 text-gray-800" />
             </button>
           </div>
         </div>
 
-        {/* Tab bar */}
-        <div className="flex">
-          {tabs.map(({ Icon, path }, i) => (
-            <button
-              key={i}
-              onClick={() => { setActiveTab(i); if (path) navigate(path); }}
-              className={`flex-1 flex items-center justify-center py-2.5 border-b-[3px] transition-colors relative ${
-                activeTab === i ? "border-[#1877F2] text-[#1877F2]" : "border-transparent text-gray-400 hover:bg-gray-50"
-              }`}
-            >
-              <Icon className="w-6 h-6" />
-              {i === 3 && notifCount > 0 && (
-                <span className="absolute top-1.5 right-[22%] w-4 h-4 bg-red-500 rounded-full text-white text-[9px] font-bold flex items-center justify-center">
-                  {notifCount > 9 ? "9+" : notifCount}
-                </span>
-              )}
-            </button>
-          ))}
+        {/* Tab bar - Home, Friends, Groups, Videos, Notifications */}
+        <div className="flex border-t border-gray-200">
+          <button className="flex-1 flex items-center justify-center py-2.5 border-b-[3px] border-[#1877F2] text-[#1877F2]">
+            <HomeIcon className="w-6 h-6" />
+          </button>
+          <button onClick={() => navigate("/friends")} className="flex-1 flex items-center justify-center py-2.5 border-b-[3px] border-transparent text-gray-400 hover:bg-gray-50">
+            <Users className="w-6 h-6" />
+          </button>
+          <button onClick={() => navigate("/groups")} className="flex-1 flex items-center justify-center py-2.5 border-b-[3px] border-transparent text-gray-400 hover:bg-gray-50">
+            <MessageCircle className="w-6 h-6" />
+          </button>
+          <button onClick={() => navigate("/videos")} className="flex-1 flex items-center justify-center py-2.5 border-b-[3px] border-transparent text-gray-400 hover:bg-gray-50">
+            <PlaySquare className="w-6 h-6" />
+          </button>
+          <button onClick={() => navigate("/notifications")} className="flex-1 flex items-center justify-center py-2.5 border-b-[3px] border-transparent text-gray-400 hover:bg-gray-50 relative">
+            <Bell className="w-6 h-6" />
+            {notifCount > 0 && (
+              <span className="absolute top-1.5 right-[22%] w-4 h-4 bg-red-500 rounded-full text-white text-[9px] font-bold flex items-center justify-center">
+                {notifCount > 9 ? "9+" : notifCount}
+              </span>
+            )}
+          </button>
         </div>
       </header>
 
@@ -295,7 +294,8 @@ export default function Home() {
         <CreatePost onClose={() => setShowCreatePost(false)} onPost={handleNewPost} />
       )}
 
-      <BottomTabBar />
+      {/* Menu Drawer */}
+      <MenuDrawer isOpen={showMenu} onClose={() => setShowMenu(false)} />
     </div>
   );
 }

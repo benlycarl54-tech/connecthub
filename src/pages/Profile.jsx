@@ -8,7 +8,6 @@ import { useRegister } from "@/context/RegisterContext";
 import { format } from "date-fns";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import PostCard from "@/components/post/PostCard";
-import BottomTabBar from "@/components/home/BottomTabBar";
 import GalleryTab from "@/components/gallery/GalleryTab";
 
 function getUserPosts(userId) {

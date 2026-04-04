@@ -395,8 +395,6 @@ export default function VideosPage() {
       {VIDEOS.map(v => (
         <VideoCard key={v.id} video={v} onPlay={setPlayingVideo} />
       ))}
-
-      <BottomTabBar />
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ChevronLeft, Plus, X, Trash2 } from "lucide-react";
 import { useFBAuth } from "@/context/AuthContext";
-import BottomTabBar from "@/components/home/BottomTabBar";
+
 
 export default function AlbumDetail() {
   const { albumId } = useParams();
@@ -166,8 +166,6 @@ export default function AlbumDetail() {
         onChange={handlePhotoUpload}
         className="hidden"
       />
-
-      <BottomTabBar />
     </div>
   );
 }

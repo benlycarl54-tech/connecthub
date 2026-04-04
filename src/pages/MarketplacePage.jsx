@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Search, Plus, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useFBAuth } from "@/context/AuthContext";
-import BottomTabBar from "@/components/home/BottomTabBar";
+
 import CreateListingModal from "@/components/marketplace/CreateListingModal";
 import ProductCard from "@/components/marketplace/ProductCard";
 
@@ -122,8 +122,6 @@ export default function MarketplacePage() {
           onListingCreated={handleListingCreated}
         />
       )}
-
-      <BottomTabBar />
     </div>
   );
 }

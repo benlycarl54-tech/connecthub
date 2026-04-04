@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ChevronLeft, MapPin, Heart, MessageCircle } from "lucide-react";
 import { useFBAuth } from "@/context/AuthContext";
-import BottomTabBar from "@/components/home/BottomTabBar";
+
 
 export default function MarketplaceDetail() {
   const { listingId } = useParams();
@@ -116,8 +116,6 @@ export default function MarketplaceDetail() {
           </button>
         </div>
       )}
-
-      <BottomTabBar />
     </div>
   );
 }
