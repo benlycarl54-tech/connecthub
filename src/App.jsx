@@ -38,6 +38,7 @@ import GroupDetail from './pages/GroupDetail';
 import AlbumDetail from './pages/AlbumDetail';
 import MarketplacePage from './pages/MarketplacePage';
 import MarketplaceDetail from './pages/MarketplaceDetail';
+import EditProfileFlow from './pages/EditProfileFlow';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -81,6 +82,7 @@ const AuthenticatedApp = () => {
         <Route path="/album/:albumId" element={<AlbumDetail />} />
         <Route path="/marketplace" element={<MarketplacePage />} />
         <Route path="/marketplace/:listingId" element={<MarketplaceDetail />} />
+        <Route path="/edit-profile" element={<EditProfileFlow />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/user/:userId" element={<UserProfile />} />
         <Route path="/admin" element={<AdminPanel />} />

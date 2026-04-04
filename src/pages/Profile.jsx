@@ -224,7 +224,7 @@ export default function Profile() {
               <button onClick={() => setShowCreatePost(true)} className="flex-1 bg-[#1877F2] text-white font-semibold py-2 rounded-lg flex items-center justify-center gap-1.5 text-sm">
                 <Plus className="w-4 h-4" /> Create
               </button>
-              <button className="flex-1 bg-gray-100 text-gray-800 font-semibold py-2 rounded-lg flex items-center justify-center gap-1.5 text-sm">
+              <button onClick={() => navigate("/edit-profile")} className="flex-1 bg-gray-100 text-gray-800 font-semibold py-2 rounded-lg flex items-center justify-center gap-1.5 text-sm">
                 <Pencil className="w-4 h-4" /> Edit profile
               </button>
             </div>
@@ -273,18 +273,44 @@ export default function Profile() {
       <div className="bg-white mt-2 px-4 py-4">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-bold text-base text-gray-900">Personal details</h2>
-          <button><Pencil className="w-4 h-4 text-gray-500" /></button>
+          <button onClick={() => navigate("/edit-profile")}><Pencil className="w-4 h-4 text-gray-500" /></button>
         </div>
+        {currentUser?.currentCity && (
+          <div className="flex items-center gap-3 mb-3">
+            <span className="text-xl">📍</span>
+            <span className="text-gray-800 text-sm">{currentUser.currentCity}</span>
+          </div>
+        )}
+        {currentUser?.hometown && (
+          <div className="flex items-center gap-3 mb-3">
+            <span className="text-xl">🏠</span>
+            <span className="text-gray-800 text-sm">{currentUser.hometown}</span>
+          </div>
+        )}
+        {currentUser?.relationshipStatus && (
+          <div className="flex items-center gap-3 mb-3">
+            <span className="text-xl">💕</span>
+            <span className="text-gray-800 text-sm">{currentUser.relationshipStatus}</span>
+          </div>
+        )}
+        {currentUser?.highSchool && (
+          <div className="flex items-center gap-3 mb-3">
+            <span className="text-xl">🎓</span>
+            <span className="text-gray-800 text-sm">{currentUser.highSchool}</span>
+          </div>
+        )}
+        {currentUser?.workExperience && (
+          <div className="flex items-center gap-3 mb-3">
+            <span className="text-xl">💼</span>
+            <span className="text-gray-800 text-sm">{currentUser.workExperience}</span>
+          </div>
+        )}
         {birthday && (
           <div className="flex items-center gap-3 mb-3">
             <span className="text-xl">🎂</span>
             <span className="text-gray-800 text-sm">{format(birthday, "MMMM d, yyyy")}</span>
           </div>
         )}
-        <div className="flex items-center gap-3 mb-3">
-          <span className="text-xl">📅</span>
-          <span className="text-gray-800 text-sm">Joined Facebook in {joinedYear}</span>
-        </div>
         {user.gender && (
           <div className="flex items-center gap-3">
             <span className="text-xl">👤</span>
