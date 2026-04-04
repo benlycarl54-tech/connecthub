@@ -6,6 +6,10 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { RegisterProvider } from './context/RegisterContext';
+import { FBAuthProvider } from './context/AuthContext';
+import SearchPage from './pages/SearchPage';
+import UserProfile from './pages/UserProfile';
+import AdminPanel from './pages/AdminPanel';
 
 import Landing from './pages/Landing';
 import Join from './pages/Join';
@@ -59,6 +63,9 @@ const AuthenticatedApp = () => {
         <Route path="/register/friends" element={<FriendsStep />} />
         <Route path="/home" element={<Home />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/search" element={<SearchPage />} />
+        <Route path="/user/:userId" element={<UserProfile />} />
+        <Route path="/admin" element={<AdminPanel />} />
         <Route path="*" element={<PageNotFound />} />
       </Routes>
     </RegisterProvider>
@@ -68,12 +75,14 @@ const AuthenticatedApp = () => {
 function App() {
   return (
     <AuthProvider>
-      <QueryClientProvider client={queryClientInstance}>
-        <Router>
-          <AuthenticatedApp />
-        </Router>
-        <Toaster />
-      </QueryClientProvider>
+      <FBAuthProvider>
+        <QueryClientProvider client={queryClientInstance}>
+          <Router>
+            <AuthenticatedApp />
+          </Router>
+          <Toaster />
+        </QueryClientProvider>
+      </FBAuthProvider>
     </AuthProvider>
   );
 }

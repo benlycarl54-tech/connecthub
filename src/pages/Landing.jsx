@@ -1,16 +1,23 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useFBAuth } from "@/context/AuthContext";
 
 export default function Landing() {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { login } = useFBAuth();
 
   const handleLogin = (e) => {
     e.preventDefault();
-    // Any credentials go to home (demo app)
-    if (identifier && password) {
+    setError("");
+    if (!identifier || !password) return;
+    const result = login(identifier, password);
+    if (result.success) {
       navigate("/home");
+    } else {
+      setError(result.error);
     }
   };
 
@@ -51,6 +58,11 @@ export default function Landing() {
         >
           Log in
         </button>
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 text-center">
+            {error}
+          </div>
+        )}
       </form>
 
       <button className="font-semibold text-sm mt-4 text-gray-800 underline">

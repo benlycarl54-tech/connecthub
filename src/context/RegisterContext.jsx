@@ -19,8 +19,30 @@ export function RegisterProvider({ children }) {
     });
   };
 
+  // Called at WelcomeStep to finalize and save the account
+  const finalizeRegistration = (profileData) => {
+    const accounts = (() => {
+      try { return JSON.parse(localStorage.getItem("fbAccounts") || "[]"); } catch { return []; }
+    })();
+    const id = Date.now().toString();
+    const newAccount = {
+      id,
+      ...profileData,
+      followers: 0,
+      following: 0,
+      likes: 0,
+      is_verified: false,
+      is_admin: false,
+      created_date: new Date().toISOString(),
+    };
+    accounts.push(newAccount);
+    localStorage.setItem("fbAccounts", JSON.stringify(accounts));
+    localStorage.setItem("fbCurrentUser", JSON.stringify(newAccount));
+    return newAccount;
+  };
+
   return (
-    <RegisterContext.Provider value={{ data, update }}>
+    <RegisterContext.Provider value={{ data, update, finalizeRegistration }}>
       {children}
     </RegisterContext.Provider>
   );

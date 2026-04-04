@@ -1,32 +1,28 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useRegister } from "@/context/RegisterContext";
-import { base44 } from "@/api/base44Client";
 
 export default function WelcomeStep() {
   const navigate = useNavigate();
-  const { data } = useRegister();
+  const { data, finalizeRegistration } = useRegister();
   const firstName = data.firstName || "Friend";
   const picture = data.profilePicture;
 
   useEffect(() => {
-    // Save profile to database
-    const save = async () => {
-      if (data.firstName) {
-        await base44.entities.UserProfile.create({
-          first_name: data.firstName || "",
-          last_name: data.lastName || "",
-          birthday: data.birthday || "",
-          gender: data.gender || "",
-          mobile_number: data.mobileNumber || "",
-          email_address: data.emailAddress || "",
-          profile_picture: data.profilePicture || "",
-          signup_method: data.signupMethod || "email",
-          is_verified: true,
-        });
-      }
-    };
-    save();
+    // Save account to localStorage auth system
+    if (data.firstName) {
+      finalizeRegistration({
+        firstName: data.firstName,
+        lastName: data.lastName,
+        birthday: data.birthday || "",
+        gender: data.gender || "",
+        mobileNumber: data.mobileNumber || "",
+        emailAddress: data.emailAddress || "",
+        profilePicture: data.profilePicture || "",
+        signupMethod: data.signupMethod || "email",
+        password: data.password || "",
+      });
+    }
 
     const timer = setTimeout(() => navigate("/register/friends"), 3000);
     return () => clearTimeout(timer);

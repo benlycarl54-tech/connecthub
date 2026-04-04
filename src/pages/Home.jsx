@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Home as HomeIcon, Users, PlaySquare, Bell, Menu, Search, Plus, MessageCircle, X, ThumbsUp, MessageSquare, Share2 } from "lucide-react";
+import { Home as HomeIcon, Users, PlaySquare, Bell, Menu, Search, Plus, MessageCircle, X, ThumbsUp, MessageSquare, Share2, Shield } from "lucide-react";
 import { useRegister } from "../context/RegisterContext";
+import { useFBAuth } from "../context/AuthContext";
 import { FEED_POSTS } from "../data/feedPosts";
 
 const STORIES = [
@@ -95,11 +96,13 @@ function PostCard({ post }) {
 export default function Home() {
   const navigate = useNavigate();
   const { data } = useRegister();
+  const { currentUser } = useFBAuth();
   const [activeTab, setActiveTab] = useState(0);
   const [showFriendsBanner, setShowFriendsBanner] = useState(true);
 
-  const avatar = data.profilePicture;
-  const firstName = data.firstName || "User";
+  // Use fbCurrentUser if available, fallback to register context
+  const avatar = currentUser?.profilePicture || data.profilePicture;
+  const firstName = currentUser?.firstName || data.firstName || "User";
 
   const tabs = [HomeIcon, Users, PlaySquare, Bell, Menu];
 
@@ -115,9 +118,14 @@ export default function Home() {
             <button className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200">
               <Plus className="w-5 h-5 text-gray-800" />
             </button>
-            <button className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200">
+            <button onClick={() => navigate("/search")} className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200">
               <Search className="w-5 h-5 text-gray-800" />
             </button>
+            {currentUser?.is_admin && (
+              <button onClick={() => navigate("/admin")} className="w-9 h-9 bg-[#1877F2] rounded-full flex items-center justify-center hover:bg-[#166FE5]">
+                <Shield className="w-4 h-4 text-white" />
+              </button>
+            )}
             <button className="w-9 h-9 bg-gray-800 rounded-full flex items-center justify-center hover:bg-gray-700">
               <MessageCircle className="w-5 h-5 text-white" />
             </button>
