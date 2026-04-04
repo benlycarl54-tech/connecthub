@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import PostCard from "@/components/post/PostCard";
 import BottomTabBar from "@/components/home/BottomTabBar";
+import GalleryTab from "@/components/gallery/GalleryTab";
 
 function getUserPosts(userId) {
   try {
@@ -232,7 +233,7 @@ export default function Profile() {
         )}
 
         <div className="flex border-t border-gray-200 px-2">
-          {["All", "Photos", "Reels"].map(tab => (
+          {["All", "Photos", "Gallery", "Reels"].map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -245,6 +246,13 @@ export default function Profile() {
           ))}
         </div>
       </div>
+
+      {/* Gallery Tab */}
+      {activeTab === "Gallery" && (
+        <div className="px-4 py-4">
+          <GalleryTab userId={currentUser?.id} />
+        </div>
+      )}
 
       {/* Personal details */}
       <div className="bg-white mt-2 px-4 py-4">

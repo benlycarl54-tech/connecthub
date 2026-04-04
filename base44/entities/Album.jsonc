@@ -1,0 +1,36 @@
+{
+  "name": "Album",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Album title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Album description"
+    },
+    "user_id": {
+      "type": "string",
+      "description": "ID of the album owner"
+    },
+    "cover_photo": {
+      "type": "string",
+      "description": "URL of the cover photo"
+    },
+    "photo_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of photos in the album"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Album creation date"
+    }
+  },
+  "required": [
+    "title",
+    "user_id"
+  ]
+}

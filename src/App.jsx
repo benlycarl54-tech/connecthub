@@ -35,6 +35,7 @@ import Home from './pages/Home';
 import Profile from './pages/Profile';
 import GroupsPage from './pages/GroupsPage';
 import GroupDetail from './pages/GroupDetail';
+import AlbumDetail from './pages/AlbumDetail';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -75,6 +76,7 @@ const AuthenticatedApp = () => {
         <Route path="/profile" element={<Profile />} />
         <Route path="/groups" element={<GroupsPage />} />
         <Route path="/group/:groupId" element={<GroupDetail />} />
+        <Route path="/album/:albumId" element={<AlbumDetail />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/user/:userId" element={<UserProfile />} />
         <Route path="/admin" element={<AdminPanel />} />

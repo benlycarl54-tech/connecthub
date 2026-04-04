@@ -237,6 +237,83 @@ export function FBAuthProvider({ children }) {
     return getAccounts().find(a => a.id === id) || null;
   };
 
+  // ── Album Management ──────────────────────────────────────────────
+  const getAlbums = () => {
+    try { return JSON.parse(localStorage.getItem("fb_albums") || "[]"); } catch { return []; }
+  };
+
+  const saveAlbums = (albums) => {
+    localStorage.setItem("fb_albums", JSON.stringify(albums));
+  };
+
+  const createAlbum = (userId, albumData) => {
+    const albums = getAlbums();
+    const id = Date.now().toString();
+    const newAlbum = {
+      id,
+      user_id: userId,
+      ...albumData,
+      photo_count: 0,
+      created_at: new Date().toISOString(),
+    };
+    albums.push(newAlbum);
+    saveAlbums(albums);
+    return newAlbum;
+  };
+
+  const getAlbumById = (albumId) => {
+    const albums = getAlbums();
+    return albums.find(a => a.id === albumId) || null;
+  };
+
+  const getUserAlbums = (userId) => {
+    const albums = getAlbums();
+    return albums.filter(a => a.user_id === userId).reverse();
+  };
+
+  const addPhotoToAlbum = (albumId, photoData) => {
+    const photosKey = `fb_album_photos_${albumId}`;
+    const photos = JSON.parse(localStorage.getItem(photosKey) || "[]");
+    const id = Date.now().toString();
+    const newPhoto = {
+      id,
+      ...photoData,
+    };
+    photos.unshift(newPhoto);
+    localStorage.setItem(photosKey, JSON.stringify(photos));
+
+    // Update album cover and count
+    const albums = getAlbums();
+    const idx = albums.findIndex(a => a.id === albumId);
+    if (idx !== -1) {
+      albums[idx] = { ...albums[idx], cover_photo: photoData.url, photo_count: photos.length };
+      saveAlbums(albums);
+    }
+
+    return newPhoto;
+  };
+
+  const getAlbumPhotos = (albumId) => {
+    const photosKey = `fb_album_photos_${albumId}`;
+    return JSON.parse(localStorage.getItem(photosKey) || "[]");
+  };
+
+  const removePhotoFromAlbum = (albumId, photoId) => {
+    const photosKey = `fb_album_photos_${albumId}`;
+    const photos = JSON.parse(localStorage.getItem(photosKey) || "[]");
+    const updated = photos.filter(p => p.id !== photoId);
+    localStorage.setItem(photosKey, JSON.stringify(updated));
+
+    // Update album count
+    const albums = getAlbums();
+    const idx = albums.findIndex(a => a.id === albumId);
+    if (idx !== -1) {
+      albums[idx] = { ...albums[idx], photo_count: updated.length };
+      saveAlbums(albums);
+    }
+  };
+  // ─────────────────────────────────────────────────────────────────────
+
   // ── Group Management ──────────────────────────────────────────────
   const getGroups = () => {
     try { return JSON.parse(localStorage.getItem("fb_groups") || "[]"); } catch { return []; }
@@ -374,6 +451,8 @@ export function FBAuthProvider({ children }) {
       adminUpdateUser, followUser, isFollowing,
       sendFriendRequest, acceptFriendRequest, declineFriendRequest,
       getFriendRequests, getFriends, isFriend, hasPendingRequest,
+      createAlbum, getAlbumById, getUserAlbums, addPhotoToAlbum,
+      getAlbumPhotos, removePhotoFromAlbum,
       createGroup, getGroupsByUser, getGroupById, getGroupMembers,
       addGroupMember, removeGroupMember, postToGroup, getGroupPosts,
     }}>
