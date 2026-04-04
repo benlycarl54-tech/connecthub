@@ -1,7 +1,6 @@
 import { useState, useRef } from "react";
 import { Play, ThumbsUp, MessageSquare, Share2, Volume2, VolumeX, ChevronLeft, Send, X, Heart, Laugh, Frown, Angry, Bookmark, MoreHorizontal } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import BottomTabBar from "../components/home/BottomTabBar";
 import { useFBAuth } from "../context/AuthContext";
 
 const REACTIONS = [
