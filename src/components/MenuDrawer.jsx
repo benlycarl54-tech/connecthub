@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, ChevronDown, ChevronUp, HelpCircle, Settings, Briefcase, Clock, Bookmark, Users, Video, ShoppingBag, UserPlus, Radio, Calendar } from "lucide-react";
+import { X, ChevronDown, ChevronUp, HelpCircle, Settings, Briefcase, Clock, Bookmark, Users, Video, ShoppingBag, UserPlus, Radio, Calendar, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useFBAuth } from "@/context/AuthContext";
 
@@ -134,6 +134,17 @@ export default function MenuDrawer({ isOpen, onClose }) {
           {expandedSettings && (
             <div className="px-3 py-2 text-sm text-gray-600 space-y-1">
               <p>Settings • Privacy Checkup</p>
+              {currentUser?.is_admin && (
+                <button
+                  onClick={() => {
+                    navigate("/admin");
+                    onClose();
+                  }}
+                  className="text-[#1877F2] font-semibold block flex items-center gap-2"
+                >
+                  <Shield className="w-4 h-4" /> Admin Panel
+                </button>
+              )}
               <button
                 onClick={() => {
                   logout();
