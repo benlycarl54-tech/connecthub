@@ -4,7 +4,7 @@ import { ChevronLeft, Search, MoreHorizontal, UserPlus, MessageCircle, Bell, Lin
 import { useFBAuth } from "@/context/AuthContext";
 import { format } from "date-fns";
 import { FEED_POSTS } from "@/data/feedPosts";
-import { FEED_USERS } from "@/data/feedUsers";
+import { FEED_USERS } from "@/data/feedUsers.js";
 import PostCard from "@/components/post/PostCard";
 
 // Each user gets a distinct profile style/theme
