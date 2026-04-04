@@ -6,6 +6,7 @@ import { useFBAuth } from "../context/AuthContext";
 import { FEED_POSTS } from "../data/feedPosts";
 import PostCard from "../components/post/PostCard";
 import CreatePost from "./CreatePost";
+import BottomTabBar from "../components/home/BottomTabBar";
 
 function getLiveState() {
   try { return JSON.parse(localStorage.getItem("fb_live_state") || "null"); } catch { return null; }
@@ -122,7 +123,7 @@ export default function Home() {
       )}
 
       {/* Feed */}
-      <div className="pb-4">
+      <div className="pb-24">
         {/* Create Post Bar */}
         <div className="bg-white mb-2 px-4 py-3 shadow-sm">
           <div className="flex items-center gap-3">
@@ -247,6 +248,8 @@ export default function Home() {
       {showCreatePost && (
         <CreatePost onClose={() => setShowCreatePost(false)} onPost={handleNewPost} />
       )}
+
+      <BottomTabBar />
     </div>
   );
 }

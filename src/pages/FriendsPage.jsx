@@ -2,16 +2,19 @@ import { useState } from "react";
 import { Search, UserPlus, Check, X } from "lucide-react";
 import { useFBAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import BottomTabBar from "../components/home/BottomTabBar";
 
 const SUGGESTED = [
-  { id: "s1", name: "Amara Johnson", mutual: 3, avatar: null, bg: "bg-pink-400" },
-  { id: "s2", name: "Kofi Mensah", mutual: 5, avatar: null, bg: "bg-blue-500" },
-  { id: "s3", name: "Fatima Al-Hassan", mutual: 2, avatar: null, bg: "bg-teal-500" },
-  { id: "s4", name: "David Osei", mutual: 7, avatar: null, bg: "bg-orange-400" },
-  { id: "s5", name: "Ngozi Williams", mutual: 1, avatar: null, bg: "bg-purple-500" },
-  { id: "s6", name: "Emmanuel Darko", mutual: 4, avatar: null, bg: "bg-green-500" },
-  { id: "s7", name: "Ama Boateng", mutual: 6, avatar: null, bg: "bg-red-400" },
-  { id: "s8", name: "Kwame Asante", mutual: 2, avatar: null, bg: "bg-yellow-500" },
+  { id: "s1", name: "Amara Johnson", mutual: 3, bg: "bg-pink-400" },
+  { id: "s2", name: "Kofi Mensah", mutual: 5, bg: "bg-blue-500" },
+  { id: "s3", name: "Fatima Al-Hassan", mutual: 2, bg: "bg-teal-500" },
+  { id: "s4", name: "David Osei", mutual: 7, bg: "bg-orange-400" },
+  { id: "s5", name: "Ngozi Williams", mutual: 1, bg: "bg-purple-500" },
+  { id: "s6", name: "Emmanuel Darko", mutual: 4, bg: "bg-green-500" },
+  { id: "s7", name: "Ama Boateng", mutual: 6, bg: "bg-red-400" },
+  { id: "s8", name: "Kwame Asante", mutual: 2, bg: "bg-yellow-500" },
+  { id: "s9", name: "Abena Frimpong", mutual: 3, bg: "bg-indigo-400" },
+  { id: "s10", name: "Yaw Mensah", mutual: 8, bg: "bg-rose-400" },
 ];
 
 function getRequests() {
@@ -23,6 +26,12 @@ function getFriends() {
 }
 function saveFriends(f) { localStorage.setItem("fb_friends", JSON.stringify(f)); }
 
+function addNotification(text, avatar, bg) {
+  const notifs = JSON.parse(localStorage.getItem("fb_notifications") || "[]");
+  notifs.unshift({ id: Date.now(), text, time: "Just now", read: false, avatar, bg });
+  localStorage.setItem("fb_notifications", JSON.stringify(notifs));
+}
+
 export default function FriendsPage() {
   const navigate = useNavigate();
   const { getAllUsers, currentUser } = useFBAuth();
@@ -31,138 +40,153 @@ export default function FriendsPage() {
   const [requests, setRequests] = useState(getRequests);
   const [friends, setFriends] = useState(getFriends);
 
-  const allUsers = getAllUsers().filter(u => u.id !== currentUser?.id);
+  const allUsers = getAllUsers().filter(u => u.id !== currentUser?.id).slice(0, 6);
+  const incomingRequests = requests.filter(r => r.fromId !== currentUser?.id);
 
   const sendRequest = (user) => {
-    const newReqs = [...requests, { ...user, fromId: currentUser?.id, time: new Date().toISOString() }];
+    const uid = user.id || user.name;
+    if (added[uid]) return;
+    const name = user.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : user.name;
+    const newReqs = [...requests, { ...user, fromId: currentUser?.id, toId: uid, time: "Just now" }];
     setRequests(newReqs);
     saveRequests(newReqs);
-    setAdded(prev => ({ ...prev, [user.id]: true }));
-    // Add a notification for the target user
-    const notifs = JSON.parse(localStorage.getItem("fb_notifications") || "[]");
-    notifs.unshift({
-      id: Date.now(),
-      type: "friend_request",
-      text: `${currentUser?.firstName || "Someone"} ${currentUser?.lastName || ""} sent you a friend request.`,
-      time: "Just now",
-      read: false,
-      avatar: currentUser?.profilePicture || null,
-      bg: "bg-[#1877F2]",
-    });
-    localStorage.setItem("fb_notifications", JSON.stringify(notifs));
+    setAdded(prev => ({ ...prev, [uid]: true }));
+    // Notify the target
+    addNotification(
+      `${currentUser?.firstName || "Someone"} ${currentUser?.lastName || ""} sent you a friend request.`,
+      currentUser?.profilePicture || null,
+      "bg-[#1877F2]"
+    );
   };
 
   const acceptRequest = (req) => {
+    const name = req.firstName ? `${req.firstName} ${req.lastName || ""}`.trim() : req.name;
     const newFriends = [...friends, req];
     saveFriends(newFriends);
     setFriends(newFriends);
-    const newReqs = requests.filter(r => r.id !== req.id);
+    const newReqs = requests.filter(r => r.id !== req.id && r.fromId !== req.fromId);
     saveRequests(newReqs);
     setRequests(newReqs);
+    addNotification(`You and ${name} are now friends.`, req.profilePicture || null, req.bg || "bg-blue-500");
   };
 
   const declineRequest = (req) => {
-    const newReqs = requests.filter(r => r.id !== req.id);
+    const newReqs = requests.filter(r => r.id !== req.id && r.fromId !== req.fromId);
     saveRequests(newReqs);
     setRequests(newReqs);
   };
 
-  const incomingRequests = requests.filter(r => r.fromId !== currentUser?.id);
+  const suggestions = [...allUsers, ...SUGGESTED];
 
   return (
-    <div className="min-h-screen bg-white max-w-md mx-auto">
+    <div className="min-h-screen bg-white max-w-md mx-auto pb-20">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-2">
-        <div className="flex items-center gap-3">
-          <button className="w-8 h-8 flex items-center justify-center">
-            <span className="text-xl font-bold text-gray-800">☰</span>
+      <div className="bg-white sticky top-0 z-30 px-4 pt-4 pb-0">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <button className="w-8 h-8 flex items-center justify-center">
+              <span className="text-xl font-bold text-gray-800">☰</span>
+            </button>
+            <h1 className="text-xl font-bold text-gray-900">Friends</h1>
+          </div>
+          <button onClick={() => navigate("/search")} className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center">
+            <Search className="w-5 h-5 text-gray-800" />
           </button>
-          <h1 className="text-xl font-bold text-gray-900">Friends</h1>
         </div>
-        <button onClick={() => navigate("/search")} className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center">
-          <Search className="w-5 h-5 text-gray-800" />
-        </button>
-      </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 px-4 pb-3">
-        <button
-          onClick={() => setActiveTab("requests")}
-          className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-colors ${activeTab === "requests" ? "bg-blue-100 text-[#1877F2] border-blue-100" : "bg-gray-100 text-gray-700 border-gray-100"}`}
-        >
-          Friend requests
-        </button>
-        <button
-          onClick={() => setActiveTab("friends")}
-          className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-colors ${activeTab === "friends" ? "bg-blue-100 text-[#1877F2] border-blue-100" : "bg-gray-100 text-gray-700 border-gray-100"}`}
-        >
-          Your friends
-        </button>
+        {/* Tabs */}
+        <div className="flex gap-2 pb-3">
+          <button
+            onClick={() => setActiveTab("requests")}
+            className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-colors ${activeTab === "requests" ? "bg-blue-100 text-[#1877F2] border-transparent" : "bg-gray-100 text-gray-700 border-transparent"}`}
+          >
+            Friend requests
+          </button>
+          <button
+            onClick={() => setActiveTab("friends")}
+            className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-colors ${activeTab === "friends" ? "bg-blue-100 text-[#1877F2] border-transparent" : "bg-gray-100 text-gray-700 border-transparent"}`}
+          >
+            Your friends
+          </button>
+        </div>
+        <div className="border-t border-gray-100" />
       </div>
-
-      <div className="border-t border-gray-100" />
 
       {activeTab === "requests" && (
         <div className="px-4">
           {incomingRequests.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20">
-              <div className="w-28 h-28 bg-blue-100 rounded-2xl flex items-center justify-center mb-5">
-                <div className="w-16 h-16 bg-blue-300 rounded-full flex items-center justify-center">
-                  <div className="w-8 h-8 bg-blue-500 rounded-full" />
+            /* Empty state — matches screenshot exactly */
+            <div className="flex flex-col items-center justify-center py-16">
+              {/* Blue card icon */}
+              <div className="w-36 h-44 bg-gradient-to-b from-blue-300 to-blue-500 rounded-2xl flex flex-col items-center justify-center mb-6 shadow-md">
+                <div className="w-16 h-16 rounded-full bg-blue-200 flex items-center justify-center mb-3">
+                  <div className="w-10 h-10 rounded-full bg-blue-400 flex items-center justify-center">
+                    <svg viewBox="0 0 24 24" className="w-7 h-7 fill-blue-700"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+                  </div>
                 </div>
+                <div className="w-16 h-1.5 bg-blue-700 rounded-full mb-1.5" />
+                <div className="w-10 h-1.5 bg-blue-700 rounded-full" />
               </div>
               <p className="text-lg font-bold text-gray-900 mb-2">No new requests</p>
-              <p className="text-sm text-gray-500 text-center mb-5 px-4">Try uploading your phone contacts so you can find your friends on Facebook.</p>
-              <button className="px-6 py-2 bg-blue-50 text-[#1877F2] font-semibold rounded-full text-sm border border-blue-100">Upload contacts</button>
+              <p className="text-sm text-gray-500 text-center mb-6 px-4 leading-relaxed">
+                Try uploading your phone contacts so you can find your friends on Facebook.
+              </p>
+              <button className="px-8 py-2.5 bg-blue-50 text-[#1877F2] font-semibold rounded-full text-sm">
+                Upload contacts
+              </button>
             </div>
           ) : (
             <div className="py-4 space-y-4">
               <p className="font-bold text-gray-900">Friend requests ({incomingRequests.length})</p>
-              {incomingRequests.map(req => (
-                <div key={req.id} className="flex items-center gap-3">
-                  <div className={`w-16 h-16 rounded-full ${req.bg || "bg-blue-500"} flex items-center justify-center flex-shrink-0 overflow-hidden`}>
-                    {req.profilePicture ? <img src={req.profilePicture} className="w-full h-full object-cover" alt="" /> : (
-                      <span className="text-white text-2xl font-bold">{req.firstName?.[0] || req.name?.[0]}</span>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-900 text-sm">{req.firstName} {req.lastName || req.name}</p>
-                    <p className="text-xs text-gray-500">{req.time || "Recently"}</p>
-                    <div className="flex gap-2 mt-2">
-                      <button onClick={() => acceptRequest(req)} className="flex-1 bg-[#1877F2] text-white font-semibold py-1.5 rounded-lg text-sm">Confirm</button>
-                      <button onClick={() => declineRequest(req)} className="flex-1 bg-gray-100 text-gray-800 font-semibold py-1.5 rounded-lg text-sm">Delete</button>
+              {incomingRequests.map((req, i) => {
+                const name = req.firstName ? `${req.firstName} ${req.lastName || ""}`.trim() : req.name;
+                return (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className={`w-16 h-16 rounded-full ${req.bg || "bg-blue-500"} flex items-center justify-center flex-shrink-0 overflow-hidden`}>
+                      {req.profilePicture ? <img src={req.profilePicture} className="w-full h-full object-cover" alt="" /> : (
+                        <span className="text-white text-2xl font-bold">{name?.[0]}</span>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold text-gray-900 text-sm">{name}</p>
+                      <p className="text-xs text-gray-400">{req.time || "Recently"}</p>
+                      <div className="flex gap-2 mt-2">
+                        <button onClick={() => acceptRequest(req)} className="flex-1 bg-[#1877F2] text-white font-semibold py-1.5 rounded-lg text-sm">Confirm</button>
+                        <button onClick={() => declineRequest(req)} className="flex-1 bg-gray-100 text-gray-800 font-semibold py-1.5 rounded-lg text-sm">Delete</button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
           {/* People you may know */}
           <div className="py-4">
-            <p className="font-bold text-gray-900 mb-3">People you may know</p>
-            <div className="space-y-4">
-              {[...allUsers.slice(0, 4), ...SUGGESTED].map((user, i) => {
+            <p className="font-bold text-gray-900 mb-4">People you may know</p>
+            <div className="space-y-5">
+              {suggestions.map((user, i) => {
                 const uid = user.id || user.name;
-                const name = user.firstName ? `${user.firstName} ${user.lastName || ""}` : user.name;
+                const name = user.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : user.name;
+                const isAdded = added[uid];
                 return (
                   <div key={uid + i} className="flex items-center gap-3">
-                    <button onClick={() => user.id && navigate(`/user/${user.id}`)} className={`w-16 h-16 rounded-full ${user.bg || "bg-blue-500"} flex items-center justify-center flex-shrink-0 overflow-hidden`}>
+                    <button onClick={() => user.id && !user.id.startsWith("s") && navigate(`/user/${user.id}`)} className={`w-14 h-14 rounded-full ${user.bg || "bg-blue-500"} flex items-center justify-center flex-shrink-0 overflow-hidden`}>
                       {user.profilePicture ? <img src={user.profilePicture} className="w-full h-full object-cover" alt="" /> : (
-                        <span className="text-white text-2xl font-bold">{name?.[0]}</span>
+                        <span className="text-white text-xl font-bold">{name?.[0]}</span>
                       )}
                     </button>
                     <div className="flex-1">
-                      <p className="font-semibold text-gray-900 text-sm">{name}</p>
-                      {(user.mutual || 0) > 0 && <p className="text-xs text-gray-500">{user.mutual} mutual friends</p>}
+                      <p className="font-semibold text-gray-900 text-sm leading-tight">{name}</p>
+                      {(user.mutual || 0) > 0 && <p className="text-xs text-gray-400 mt-0.5">{user.mutual} mutual friends</p>}
                       <button
                         onClick={() => sendRequest(user)}
-                        className={`mt-1.5 flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-semibold ${added[uid] ? "bg-gray-100 text-gray-500" : "bg-blue-50 text-[#1877F2]"}`}
+                        className={`mt-2 flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors ${isAdded ? "bg-gray-100 text-gray-500" : "bg-[#E7F3FF] text-[#1877F2]"}`}
                       >
-                        {added[uid] ? <><Check className="w-4 h-4" /> Request sent</> : <><UserPlus className="w-4 h-4" /> Add friend</>}
+                        {isAdded ? <><Check className="w-3.5 h-3.5" /> Request sent</> : <><UserPlus className="w-3.5 h-3.5" /> Add friend</>}
                       </button>
                     </div>
-                    <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">
+                    <button onClick={() => {}} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 flex-shrink-0">
                       <X className="w-4 h-4 text-gray-400" />
                     </button>
                   </div>
@@ -181,20 +205,24 @@ export default function FriendsPage() {
                 <span className="text-5xl">👥</span>
               </div>
               <p className="font-bold text-gray-900">No friends yet</p>
-              <p className="text-sm text-gray-500 text-center mt-1">Accept friend requests to see them here.</p>
+              <p className="text-sm text-gray-500 text-center mt-1 px-6">Accept friend requests to see them here.</p>
             </div>
           ) : (
             <div className="space-y-4">
               {friends.map((f, i) => {
-                const name = f.firstName ? `${f.firstName} ${f.lastName || ""}` : f.name;
+                const name = f.firstName ? `${f.firstName} ${f.lastName || ""}`.trim() : f.name;
                 return (
                   <div key={i} className="flex items-center gap-3">
-                    <div className={`w-14 h-14 rounded-full ${f.bg || "bg-blue-500"} flex items-center justify-center overflow-hidden`}>
+                    <div className={`w-14 h-14 rounded-full ${f.bg || "bg-blue-500"} flex items-center justify-center overflow-hidden flex-shrink-0`}>
                       {f.profilePicture ? <img src={f.profilePicture} className="w-full h-full object-cover" alt="" /> : (
                         <span className="text-white text-xl font-bold">{name?.[0]}</span>
                       )}
                     </div>
-                    <p className="font-semibold text-gray-900">{name}</p>
+                    <div className="flex-1">
+                      <p className="font-semibold text-gray-900">{name}</p>
+                      <p className="text-xs text-gray-400">Friends</p>
+                    </div>
+                    <button className="px-4 py-1.5 bg-gray-100 rounded-lg text-sm font-semibold text-gray-700">Message</button>
                   </div>
                 );
               })}
@@ -202,6 +230,8 @@ export default function FriendsPage() {
           )}
         </div>
       )}
+
+      <BottomTabBar />
     </div>
   );
 }
