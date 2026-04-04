@@ -1,0 +1,57 @@
+{
+  "name": "UserProfile",
+  "type": "object",
+  "properties": {
+    "first_name": {
+      "type": "string",
+      "description": "User's first name"
+    },
+    "last_name": {
+      "type": "string",
+      "description": "User's last name"
+    },
+    "birthday": {
+      "type": "string",
+      "format": "date",
+      "description": "User's date of birth"
+    },
+    "gender": {
+      "type": "string",
+      "enum": [
+        "female",
+        "male",
+        "other"
+      ],
+      "description": "User's gender"
+    },
+    "mobile_number": {
+      "type": "string",
+      "description": "User's mobile number"
+    },
+    "email_address": {
+      "type": "string",
+      "description": "User's email for signup"
+    },
+    "profile_picture": {
+      "type": "string",
+      "description": "URL to profile picture"
+    },
+    "signup_method": {
+      "type": "string",
+      "enum": [
+        "phone",
+        "email"
+      ],
+      "description": "How the user signed up"
+    },
+    "is_verified": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether user is verified"
+    }
+  },
+  "required": [
+    "first_name",
+    "last_name"
+  ]
+}

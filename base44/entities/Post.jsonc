@@ -1,0 +1,42 @@
+{
+  "name": "Post",
+  "type": "object",
+  "properties": {
+    "author_name": {
+      "type": "string",
+      "description": "Name of the post author"
+    },
+    "author_avatar": {
+      "type": "string",
+      "description": "URL to author avatar"
+    },
+    "content": {
+      "type": "string",
+      "description": "Post text content"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Optional image URL"
+    },
+    "likes_count": {
+      "type": "number",
+      "default": 0
+    },
+    "comments_count": {
+      "type": "number",
+      "default": 0
+    },
+    "shares_count": {
+      "type": "number",
+      "default": 0
+    },
+    "time_ago": {
+      "type": "string",
+      "description": "Display time like '2h' or '1d'"
+    }
+  },
+  "required": [
+    "author_name",
+    "content"
+  ]
+}
