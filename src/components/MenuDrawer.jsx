@@ -149,7 +149,7 @@ export default function MenuDrawer({ isOpen, onClose }) {
         </div>
 
         {/* Admin Panel - Only for admins */}
-        {currentUser?.is_admin && (
+        {(currentUser?.is_admin || currentUser?.role === 'admin') && (
           <div className="px-4 py-3 border-t border-gray-200">
             <button
               onClick={() => {
