@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Search, MoreHorizontal, Camera, Pencil, Plus, ChevronDown, X, LogOut, Shield, Check, AtSign } from "lucide-react";
+import { ChevronLeft, Search, MoreHorizontal, Camera, Pencil, Plus, ChevronDown, X, LogOut, Shield, Check, AtSign, Share2 } from "lucide-react";
 import CreatePost from "./CreatePost";
 import { useFBAuth } from "@/context/AuthContext";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -84,6 +84,15 @@ export default function Profile() {
     reader.readAsDataURL(file);
   };
 
+  const handleShareProfile = () => {
+    if (!currentUser?.id) return;
+    const profileLink = `${window.location.origin}/user/${currentUser.id}`;
+    navigator.clipboard.writeText(profileLink).then(() => {
+      alert('Profile link copied to clipboard!');
+      setShowMenu(false);
+    });
+  };
+
   return (
     <div className="min-h-screen bg-[#F0F2F5] max-w-md mx-auto pb-20">
       {/* Top nav */}
@@ -100,24 +109,31 @@ export default function Profile() {
             <MoreHorizontal className="w-5 h-5 text-gray-700 dark:text-gray-300" />
           </button>
           {showMenu && (
-            <div className="absolute right-0 top-11 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 w-48 z-50 overflow-hidden">
-              {currentUser?.is_admin && (
-                <button
-                  onClick={() => { setShowMenu(false); navigate("/admin"); }}
-                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 text-left"
-                >
-                  <Shield className="w-5 h-5 text-[#1877F2]" />
-                  <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">Admin Panel</span>
-                </button>
-              )}
-              <button
-                onClick={() => { setShowMenu(false); handleLogout(); }}
-                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 text-left"
-              >
-                <LogOut className="w-5 h-5 text-red-500" />
-                <span className="text-sm font-semibold text-red-500">Log out</span>
-              </button>
-            </div>
+           <div className="absolute right-0 top-11 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 w-48 z-50 overflow-hidden">
+             <button
+               onClick={handleShareProfile}
+               className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 text-left"
+             >
+               <Share2 className="w-5 h-5 text-[#1877F2]" />
+               <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">Share profile</span>
+             </button>
+             {currentUser?.is_admin && (
+               <button
+                 onClick={() => { setShowMenu(false); navigate("/admin"); }}
+                 className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 text-left border-t border-gray-100 dark:border-gray-700"
+               >
+                 <Shield className="w-5 h-5 text-[#1877F2]" />
+                 <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">Admin Panel</span>
+               </button>
+             )}
+             <button
+               onClick={() => { setShowMenu(false); handleLogout(); }}
+               className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 text-left border-t border-gray-100 dark:border-gray-700"
+             >
+               <LogOut className="w-5 h-5 text-red-500" />
+               <span className="text-sm font-semibold text-red-500">Log out</span>
+             </button>
+           </div>
           )}
         </div>
       </div>
