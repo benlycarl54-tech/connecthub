@@ -161,7 +161,8 @@ export function FBAuthProvider({ children }) {
     const q = query.toLowerCase();
     const accountMatches = getAccounts().filter(a =>
       `${a.firstName} ${a.lastName}`.toLowerCase().includes(q) ||
-      a.emailAddress?.toLowerCase().includes(q)
+      a.emailAddress?.toLowerCase().includes(q) ||
+      (a.username && a.username.toLowerCase().includes(q))
     );
     const feedMatches = FEED_USERS.filter(u =>
       `${u.firstName} ${u.lastName}`.toLowerCase().includes(q)

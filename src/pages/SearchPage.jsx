@@ -93,7 +93,7 @@ export default function SearchPage() {
                         {isMe && <span className="text-xs text-gray-400 ml-1">(You)</span>}
                       </div>
                       <p className="text-xs text-gray-500">
-                        {(user.followers || 0).toLocaleString()} followers
+                        {user.username ? `@${user.username} · ` : ""}{(user.followers || 0).toLocaleString()} followers
                       </p>
                     </button>
 

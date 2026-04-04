@@ -113,6 +113,9 @@ export default function UserProfile() {
               <h1 className="text-lg font-bold text-gray-900 leading-tight">{fullName}</h1>
               {user.is_verified && <VerifiedBadge size={20} />}
             </div>
+            {user.username && (
+              <p className="text-xs text-[#1877F2] font-medium">@{user.username}</p>
+            )}
             <p className="text-xs text-gray-500 mt-0.5">
               {formatCount(user.followers)} followers · {formatCount(user.following)} following · {formatCount(user.likes || 0)} likes
             </p>
@@ -157,7 +160,10 @@ export default function UserProfile() {
                 <><UserPlus className="w-4 h-4" /> Follow</>
               )}
             </button>
-            <button className="flex-1 bg-gray-100 text-gray-800 font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 text-sm">
+            <button
+              onClick={() => navigate("/messages", { state: { startChatWith: user } })}
+              className="flex-1 bg-gray-100 text-gray-800 font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 text-sm"
+            >
               <MessageCircle className="w-4 h-4" /> Message
             </button>
           </div>

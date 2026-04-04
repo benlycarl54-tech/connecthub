@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Search, MoreHorizontal, Camera, Pencil, Plus, ChevronDown, X, LogOut, Shield } from "lucide-react";
+import { ChevronLeft, Search, MoreHorizontal, Camera, Pencil, Plus, ChevronDown, X, LogOut, Shield, Check, AtSign } from "lucide-react";
 import CreatePost from "./CreatePost";
 import { useFBAuth } from "@/context/AuthContext";
 import { useRegister } from "@/context/RegisterContext";
@@ -30,6 +30,8 @@ export default function Profile() {
   const user = currentUser || data;
   const fullName = `${user.firstName || "Your"} ${user.lastName || "Name"}`;
   const picture = user.profilePicture;
+  const [editingUsername, setEditingUsername] = useState(false);
+  const [usernameInput, setUsernameInput] = useState(user.username || "");
   const birthday = user.birthday ? new Date(user.birthday) : null;
   const joinedYear = user.created_date ? new Date(user.created_date).getFullYear() : new Date().getFullYear();
 
@@ -52,6 +54,12 @@ export default function Profile() {
   const handleLogout = () => {
     logout();
     navigate("/");
+  };
+
+  const saveUsername = () => {
+    const trimmed = usernameInput.trim().replace(/\s+/g, "").toLowerCase();
+    if (trimmed) updateCurrentUser({ username: trimmed });
+    setEditingUsername(false);
   };
 
   return (
@@ -125,6 +133,31 @@ export default function Profile() {
             <div className="flex items-center gap-1.5 mb-0.5">
               <h1 className="text-xl font-bold text-gray-900">{fullName}</h1>
               {currentUser?.is_verified && <VerifiedBadge size={20} />}
+            </div>
+            {/* Username row */}
+            <div className="flex items-center gap-1 mb-0.5">
+              {editingUsername ? (
+                <div className="flex items-center gap-1">
+                  <span className="text-gray-400 text-sm">@</span>
+                  <input
+                    autoFocus
+                    value={usernameInput}
+                    onChange={e => setUsernameInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter") saveUsername(); if (e.key === "Escape") setEditingUsername(false); }}
+                    className="border border-[#1877F2] rounded-lg px-2 py-0.5 text-sm outline-none w-36"
+                    placeholder="username"
+                  />
+                  <button onClick={saveUsername} className="w-6 h-6 bg-[#1877F2] rounded-full flex items-center justify-center">
+                    <Check className="w-3 h-3 text-white" />
+                  </button>
+                </div>
+              ) : (
+                <button onClick={() => { setUsernameInput(user.username || ""); setEditingUsername(true); }} className="flex items-center gap-1 text-sm text-[#1877F2] hover:underline">
+                  <AtSign className="w-3.5 h-3.5" />
+                  <span>{user.username || "Set username"}</span>
+                  <Pencil className="w-3 h-3 text-gray-400" />
+                </button>
+              )}
             </div>
             <p className="text-sm text-gray-500 mb-1">
               {currentUser?.followers || 0} followers · {currentUser?.following || 0} following

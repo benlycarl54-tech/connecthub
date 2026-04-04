@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ChevronLeft, Send, Search } from "lucide-react";
 import { useFBAuth } from "@/context/AuthContext";
 
@@ -18,6 +18,7 @@ function saveMessages(convoId, msgs) {
 
 export default function Messages() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { currentUser, getAllUsers } = useFBAuth();
   const [view, setView] = useState("list"); // "list" | "chat"
   const [activeConvo, setActiveConvo] = useState(null);
@@ -29,7 +30,13 @@ export default function Messages() {
   const bottomRef = useRef(null);
 
   useEffect(() => {
-    if (currentUser) setConversations(getConversations(currentUser.id));
+    if (currentUser) {
+      setConversations(getConversations(currentUser.id));
+      // If navigated here with a user to start chat with
+      if (location.state?.startChatWith) {
+        startNewChat(location.state.startChatWith);
+      }
+    }
   }, [currentUser]);
 
   useEffect(() => {
@@ -72,12 +79,33 @@ export default function Messages() {
     const updated = [...messages, msg];
     setMessages(updated);
     saveMessages(activeConvo.id, updated);
-    // Update last message in convo list
+
+    // Update sender's convo list
     const updatedConvos = conversations.map(c =>
       c.id === activeConvo.id ? { ...c, lastMsg: text.trim(), lastTime: "now" } : c
     );
     setConversations(updatedConvos);
     saveConversations(currentUser.id, updatedConvos);
+
+    // Also sync to recipient's convo list so they can receive it
+    const recipientConvos = getConversations(activeConvo.otherId);
+    const recipientConvoId = activeConvo.id;
+    const existingRecipientConvo = recipientConvos.find(c => c.id === recipientConvoId);
+    const recipientConvoEntry = existingRecipientConvo
+      ? { ...existingRecipientConvo, lastMsg: text.trim(), lastTime: "now" }
+      : {
+          id: recipientConvoId,
+          otherId: currentUser.id,
+          otherName: `${currentUser.firstName} ${currentUser.lastName}`,
+          otherAvatar: currentUser.profilePicture || null,
+          lastMsg: text.trim(),
+          lastTime: "now",
+        };
+    const updatedRecipientConvos = existingRecipientConvo
+      ? recipientConvos.map(c => c.id === recipientConvoId ? recipientConvoEntry : c)
+      : [recipientConvoEntry, ...recipientConvos];
+    saveConversations(activeConvo.otherId, updatedRecipientConvos);
+
     setActiveConvo(prev => ({ ...prev, lastMsg: text.trim() }));
     setText("");
   };
