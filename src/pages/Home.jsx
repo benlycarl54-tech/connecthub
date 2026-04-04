@@ -41,17 +41,35 @@ export default function Home() {
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [userPosts, setUserPosts] = useState([]);
   const [liveActive, setLiveActive] = useState(false);
+  const [feedPosts, setFeedPosts] = useState([]);
+  const [lastPollTime, setLastPollTime] = useState(0);
 
   const avatar = currentUser?.profilePicture || data.profilePicture;
   const firstName = currentUser?.firstName || data.firstName || "User";
 
-  // Poll for live state every 3s
+  // Poll for live state and new posts every 5s
   useEffect(() => {
-    const check = () => setLiveActive(!!getLiveState()?.isLive);
-    check();
-    const interval = setInterval(check, 3000);
+    const pollNewPosts = () => {
+      setLiveActive(!!getLiveState()?.isLive);
+      
+      try {
+        const allPosts = JSON.parse(localStorage.getItem("fb_user_posts") || "[]");
+        const currentTime = Date.now();
+        const newPosts = allPosts.filter(p => p.created_at > lastPollTime && p.authorId !== currentUser?.id);
+        
+        if (newPosts.length > 0) {
+          setFeedPosts(prev => [...newPosts.sort((a, b) => b.created_at - a.created_at), ...prev]);
+          setLastPollTime(currentTime);
+        }
+      } catch (e) {
+        console.error("Poll error:", e);
+      }
+    };
+
+    pollNewPosts();
+    const interval = setInterval(pollNewPosts, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [currentUser?.id, lastPollTime]);
 
   const handleNewPost = (post) => {
     setUserPosts(prev => [post, ...prev]);
@@ -248,14 +266,19 @@ export default function Home() {
         </div>
 
         {/* User's own new posts */}
-        {userPosts.map(post => (
-          <PostCard key={post.id} post={post} authorName={post.name} authorAvatar={post.avatar} authorVerified={post.verified} authorId={post.authorId} />
-        ))}
+         {userPosts.map(post => (
+           <PostCard key={post.id} post={post} authorName={post.name} authorAvatar={post.avatar} authorVerified={post.verified} authorId={post.authorId} />
+         ))}
 
-        {/* Mixed feed posts */}
-        {MIXED_FEED.map(post => (
-          <PostCard key={post.id} post={post} />
-        ))}
+         {/* Real-time feed posts from other users */}
+         {feedPosts.map(post => (
+           <PostCard key={post.id} post={post} authorName={post.author_name} authorAvatar={post.author_avatar} authorId={post.authorId} />
+         ))}
+
+         {/* Mixed feed posts */}
+         {MIXED_FEED.map(post => (
+           <PostCard key={post.id} post={post} />
+         ))}
       </div>
 
       {/* Create Post Modal */}
