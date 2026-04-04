@@ -35,6 +35,7 @@ export default function Profile() {
   const [myPosts, setMyPosts] = useState([]);
   const [postRefresh, setPostRefresh] = useState(0);
   const coverInputRef = useRef(null);
+  const profilePicInputRef = useRef(null);
 
   const user = currentUser || data;
   const fullName = `${user.firstName || "Your"} ${user.lastName || "Name"}`;
@@ -79,6 +80,19 @@ export default function Profile() {
       const base64 = event.target?.result;
       if (typeof base64 === 'string') {
         updateCurrentUser({ coverPhoto: base64 });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleProfilePictureUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result;
+      if (typeof base64 === 'string') {
+        updateCurrentUser({ profilePicture: base64 });
       }
     };
     reader.readAsDataURL(file);
@@ -173,9 +187,19 @@ export default function Profile() {
                     </div>
                   )}
                 </div>
-                <button className="absolute bottom-1 right-1 w-7 h-7 bg-gray-200 rounded-full flex items-center justify-center border-2 border-white">
-                  <Camera className="w-3.5 h-3.5 text-gray-700" />
-                </button>
+                <button 
+                onClick={() => profilePicInputRef.current?.click()}
+                className="absolute bottom-1 right-1 w-7 h-7 bg-gray-200 rounded-full flex items-center justify-center border-2 border-white hover:bg-gray-300"
+              >
+                <Camera className="w-3.5 h-3.5 text-gray-700" />
+              </button>
+              <input
+                ref={profilePicInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleProfilePictureUpload}
+                className="hidden"
+              />
               </div>
               <button className="flex items-center gap-1 bg-gray-100 px-3 py-1.5 rounded-full">
                 <ChevronDown className="w-4 h-4 text-gray-700" />
