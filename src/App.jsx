@@ -12,6 +12,9 @@ import UserProfile from './pages/UserProfile';
 import AdminPanel from './pages/AdminPanel';
 import Messages from './pages/Messages';
 import LivePage from './pages/LivePage';
+import FriendsPage from './pages/FriendsPage';
+import NotificationsPage from './pages/NotificationsPage';
+import VideosPage from './pages/VideosPage';
 import CreateStory from './pages/CreateStory';
 import StoryViewer from './pages/StoryViewer';
 
@@ -72,6 +75,9 @@ const AuthenticatedApp = () => {
         <Route path="/admin" element={<AdminPanel />} />
         <Route path="/messages" element={<Messages />} />
         <Route path="/live" element={<LivePage />} />
+        <Route path="/friends" element={<FriendsPage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
+        <Route path="/videos" element={<VideosPage />} />
         <Route path="/create-story" element={<CreateStory />} />
         <Route path="/story-viewer" element={<StoryViewer />} />
         <Route path="*" element={<PageNotFound />} />

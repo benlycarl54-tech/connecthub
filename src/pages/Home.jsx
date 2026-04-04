@@ -54,7 +54,17 @@ export default function Home() {
     navigate("/story-viewer", { state: { stories: allStories, startIndex } });
   };
 
-  const tabs = [HomeIcon, Users, PlaySquare, Bell, Menu];
+  const tabs = [
+    { Icon: HomeIcon, path: null },
+    { Icon: Users, path: "/friends" },
+    { Icon: PlaySquare, path: "/videos" },
+    { Icon: Bell, path: "/notifications" },
+    { Icon: Menu, path: "/profile" },
+  ];
+
+  const [notifCount, setNotifCount] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("fb_notifications") || "[]").filter(n => !n.read).length; } catch { return 0; }
+  });
 
   return (
     <div className="min-h-screen bg-[#F0F2F5] max-w-md mx-auto">
@@ -81,15 +91,20 @@ export default function Home() {
 
         {/* Tab bar */}
         <div className="flex">
-          {tabs.map((Icon, i) => (
+          {tabs.map(({ Icon, path }, i) => (
             <button
               key={i}
-              onClick={() => setActiveTab(i)}
-              className={`flex-1 flex items-center justify-center py-2.5 border-b-[3px] transition-colors ${
+              onClick={() => { setActiveTab(i); if (path) navigate(path); }}
+              className={`flex-1 flex items-center justify-center py-2.5 border-b-[3px] transition-colors relative ${
                 activeTab === i ? "border-[#1877F2] text-[#1877F2]" : "border-transparent text-gray-400 hover:bg-gray-50"
               }`}
             >
               <Icon className="w-6 h-6" />
+              {i === 3 && notifCount > 0 && (
+                <span className="absolute top-1.5 right-[22%] w-4 h-4 bg-red-500 rounded-full text-white text-[9px] font-bold flex items-center justify-center">
+                  {notifCount > 9 ? "9+" : notifCount}
+                </span>
+              )}
             </button>
           ))}
         </div>
