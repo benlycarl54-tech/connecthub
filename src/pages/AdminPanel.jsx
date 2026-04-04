@@ -127,10 +127,8 @@ export default function AdminPanel() {
     );
   }
 
-  const allUsers = getAllUsers().filter(u => !u.id?.startsWith("feed_"));
-  const filtered = search.trim()
-    ? allUsers.filter(u => `${u.firstName} ${u.lastName}`.toLowerCase().includes(search.toLowerCase()))
-    : allUsers;
+  const allUsers = [currentUser].filter(Boolean);
+  const filtered = allUsers;
 
   const handleSave = (userId, updates) => {
     adminUpdateUser(userId, updates);
@@ -162,17 +160,7 @@ export default function AdminPanel() {
           </div>
           {saved && <span className="ml-auto text-xs text-green-600 font-semibold animate-pulse">✓ Saved!</span>}
         </div>
-        <div className="px-4 pb-3">
-          <div className="flex items-center bg-gray-100 rounded-full px-3 py-2 gap-2">
-            <Search className="w-4 h-4 text-gray-500" />
-            <input
-              placeholder="Search users..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="flex-1 bg-transparent text-sm outline-none"
-            />
-          </div>
-        </div>
+
       </div>
 
       {/* Stats bar */}
