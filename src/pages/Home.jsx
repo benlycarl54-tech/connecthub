@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Home as HomeIcon, Users, PlaySquare, Bell, Menu, Search, Plus, MessageCircle, Shield } from "lucide-react";
+import { Home as HomeIcon, Users, PlaySquare, Bell, Menu, Search, Plus, MessageCircle, Shield, X } from "lucide-react";
 import { useRegister } from "../context/RegisterContext";
 import { useFBAuth } from "../context/AuthContext";
 import { FEED_POSTS } from "../data/feedPosts";
