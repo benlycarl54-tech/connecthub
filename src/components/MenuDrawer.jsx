@@ -17,6 +17,9 @@ const MENU_ITEMS = [
 export default function MenuDrawer({ isOpen, onClose }) {
   const navigate = useNavigate();
   const { currentUser, logout } = useFBAuth();
+
+  // Prevent non-admins from accessing admin panel
+  const isAdmin = currentUser?.is_admin || currentUser?.role === 'admin';
   const [expandedHelp, setExpandedHelp] = useState(false);
   const [expandedSettings, setExpandedSettings] = useState(false);
   const [expandedAccess, setExpandedAccess] = useState(false);
@@ -149,7 +152,7 @@ export default function MenuDrawer({ isOpen, onClose }) {
         </div>
 
         {/* Admin Panel - Only for admins */}
-        {(currentUser?.is_admin || currentUser?.role === 'admin') && (
+        {isAdmin && (
           <div className="px-4 py-3 border-t border-gray-200">
             <button
               onClick={() => {
