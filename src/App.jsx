@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { RegisterProvider } from './context/RegisterContext';
 import { FBAuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import SearchPage from './pages/SearchPage';
 import UserProfile from './pages/UserProfile';
 import AdminPanel from './pages/AdminPanel';
@@ -88,16 +89,18 @@ const AuthenticatedApp = () => {
 
 function App() {
   return (
-    <AuthProvider>
-      <FBAuthProvider>
-        <QueryClientProvider client={queryClientInstance}>
-          <Router>
-            <AuthenticatedApp />
-          </Router>
-          <Toaster />
-        </QueryClientProvider>
-      </FBAuthProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <FBAuthProvider>
+          <QueryClientProvider client={queryClientInstance}>
+            <Router>
+              <AuthenticatedApp />
+            </Router>
+            <Toaster />
+          </QueryClientProvider>
+        </FBAuthProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

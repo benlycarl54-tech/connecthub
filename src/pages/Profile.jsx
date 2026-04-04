@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ChevronLeft, Search, MoreHorizontal, Camera, Pencil, Plus, ChevronDown, X, LogOut, Shield, Check, AtSign } from "lucide-react";
 import CreatePost from "./CreatePost";
 import { useFBAuth } from "@/context/AuthContext";
+import ThemeToggle from "@/components/ThemeToggle";
 import { useRegister } from "@/context/RegisterContext";
 import { format } from "date-fns";
 import VerifiedBadge from "@/components/VerifiedBadge";
@@ -86,31 +87,32 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-[#F0F2F5] max-w-md mx-auto pb-20">
       {/* Top nav */}
-      <div className="bg-[#F0F2F5] flex items-center justify-between px-3 py-2 sticky top-0 z-40">
+      <div className="bg-[#F0F2F5] dark:bg-gray-900 flex items-center justify-between px-3 py-2 sticky top-0 z-40">
         <button onClick={() => navigate("/home")} className="w-9 h-9 flex items-center justify-center">
-          <ChevronLeft className="w-6 h-6 text-gray-800" />
+          <ChevronLeft className="w-6 h-6 text-gray-800 dark:text-gray-200" />
         </button>
         <div className="flex items-center gap-2 relative">
-          <button onClick={() => navigate("/search")} className="w-9 h-9 bg-white rounded-full flex items-center justify-center shadow">
-            <Search className="w-5 h-5 text-gray-700" />
+          <ThemeToggle />
+          <button onClick={() => navigate("/search")} className="w-9 h-9 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow">
+            <Search className="w-5 h-5 text-gray-700 dark:text-gray-300" />
           </button>
-          <button onClick={() => setShowMenu(!showMenu)} className="w-9 h-9 bg-white rounded-full flex items-center justify-center shadow">
-            <MoreHorizontal className="w-5 h-5 text-gray-700" />
+          <button onClick={() => setShowMenu(!showMenu)} className="w-9 h-9 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow">
+            <MoreHorizontal className="w-5 h-5 text-gray-700 dark:text-gray-300" />
           </button>
           {showMenu && (
-            <div className="absolute right-0 top-11 bg-white rounded-xl shadow-xl border border-gray-100 w-48 z-50 overflow-hidden">
+            <div className="absolute right-0 top-11 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 w-48 z-50 overflow-hidden">
               {currentUser?.is_admin && (
                 <button
                   onClick={() => { setShowMenu(false); navigate("/admin"); }}
-                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 text-left"
+                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 text-left"
                 >
                   <Shield className="w-5 h-5 text-[#1877F2]" />
-                  <span className="text-sm font-semibold text-gray-900">Admin Panel</span>
+                  <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">Admin Panel</span>
                 </button>
               )}
               <button
                 onClick={() => { setShowMenu(false); handleLogout(); }}
-                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 text-left"
+                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 text-left"
               >
                 <LogOut className="w-5 h-5 text-red-500" />
                 <span className="text-sm font-semibold text-red-500">Log out</span>
