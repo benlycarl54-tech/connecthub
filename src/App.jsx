@@ -10,6 +10,10 @@ import { FBAuthProvider } from './context/AuthContext';
 import SearchPage from './pages/SearchPage';
 import UserProfile from './pages/UserProfile';
 import AdminPanel from './pages/AdminPanel';
+import Messages from './pages/Messages';
+import LivePage from './pages/LivePage';
+import CreateStory from './pages/CreateStory';
+import StoryViewer from './pages/StoryViewer';
 
 import Landing from './pages/Landing';
 import Join from './pages/Join';
@@ -66,6 +70,10 @@ const AuthenticatedApp = () => {
         <Route path="/search" element={<SearchPage />} />
         <Route path="/user/:userId" element={<UserProfile />} />
         <Route path="/admin" element={<AdminPanel />} />
+        <Route path="/messages" element={<Messages />} />
+        <Route path="/live" element={<LivePage />} />
+        <Route path="/create-story" element={<CreateStory />} />
+        <Route path="/story-viewer" element={<StoryViewer />} />
         <Route path="*" element={<PageNotFound />} />
       </Routes>
     </RegisterProvider>

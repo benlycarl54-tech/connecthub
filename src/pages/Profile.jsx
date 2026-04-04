@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, Search, MoreHorizontal, Camera, Pencil, Plus, ChevronDown, X, LogOut, Shield } from "lucide-react";
+import CreatePost from "./CreatePost";
 import { useFBAuth } from "@/context/AuthContext";
 import { useRegister } from "@/context/RegisterContext";
 import { format } from "date-fns";
@@ -12,6 +13,7 @@ export default function Profile() {
   const [activeTab, setActiveTab] = useState("All");
   const [showBanner, setShowBanner] = useState(true);
   const [showMenu, setShowMenu] = useState(false);
+  const [showCreatePost, setShowCreatePost] = useState(false);
 
   // Use currentUser if logged in via real auth, fallback to register context
   const user = currentUser || data;
@@ -106,7 +108,7 @@ export default function Profile() {
             </p>
 
             <div className="flex gap-2 mt-3">
-              <button className="flex-1 bg-[#1877F2] text-white font-semibold py-2 rounded-lg flex items-center justify-center gap-1.5 text-sm">
+              <button onClick={() => setShowCreatePost(true)} className="flex-1 bg-[#1877F2] text-white font-semibold py-2 rounded-lg flex items-center justify-center gap-1.5 text-sm">
                 <Plus className="w-4 h-4" /> Create
               </button>
               <button className="flex-1 bg-gray-100 text-gray-800 font-semibold py-2 rounded-lg flex items-center justify-center gap-1.5 text-sm">
@@ -213,8 +215,8 @@ export default function Profile() {
           </button>
         </div>
         <div className="flex gap-3 pt-2 border-t border-gray-100">
-          <button className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-full text-sm font-semibold text-gray-700">🎬 Reel</button>
-          <button className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-full text-sm font-semibold text-gray-700">📹 Live</button>
+          <button onClick={() => setShowCreatePost(true)} className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-full text-sm font-semibold text-gray-700">🎬 Reel</button>
+          <button onClick={() => navigate("/live")} className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-full text-sm font-semibold text-gray-700">📹 Live</button>
         </div>
         <div className="mt-3 pt-2 border-t border-gray-100 flex items-center gap-2 text-gray-500">
           <span className="text-lg">📋</span>
@@ -285,6 +287,8 @@ export default function Profile() {
           </div>
         </div>
       )}
+
+      {showCreatePost && <CreatePost onClose={() => setShowCreatePost(false)} />}
 
       {/* Logout button at bottom */}
       <div className="bg-white mt-2 mb-6 px-4 py-3">
