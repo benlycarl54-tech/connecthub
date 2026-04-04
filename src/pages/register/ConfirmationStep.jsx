@@ -1,54 +1,60 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
+import { useRegister } from "@/context/RegisterContext";
 
 export default function ConfirmationStep() {
   const navigate = useNavigate();
+  const { data } = useRegister();
   const [code, setCode] = useState("");
 
-  const contact = localStorage.getItem("reg_email") || localStorage.getItem("reg_mobile") || "your email/phone";
+  const contact = data.emailAddress || data.mobileNumber || "your contact";
 
   const handleNext = () => {
-    if (code.length === 5) {
+    // Accept any 5-digit code for demo
+    if (code.length >= 5) {
       navigate("/register/picture");
     }
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col px-5 py-4">
-      <button onClick={() => navigate("/register/terms")} className="mb-6">
-        <X className="w-6 h-6 text-foreground" />
+    <div className="min-h-screen bg-white flex flex-col px-5 py-4 max-w-md mx-auto">
+      <button onClick={() => navigate("/register/terms")} className="mb-6 self-start">
+        <X className="w-6 h-6 text-gray-800" />
       </button>
 
-      <h1 className="text-2xl font-bold text-foreground mb-2">Enter the confirmation code</h1>
-      <p className="text-base text-muted-foreground mb-6">
-        To confirm your account, enter the 5-digit code we sent to {contact}.
+      <h1 className="text-2xl font-bold text-gray-900 mb-1">
+        Enter confirmation code
+      </h1>
+      <p className="text-gray-500 text-base mb-6">
+        To confirm your account, enter the 5-digit code we sent to{" "}
+        <span className="font-semibold text-gray-800">{contact}</span>.{" "}
+        <span className="text-[#1877F2] cursor-pointer">Why did I receive this?</span>
       </p>
 
-      <Input
-        placeholder="Confirmation code"
+      <input
+        placeholder="- - - - -"
         value={code}
-        onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 5))}
-        className="h-14 rounded-2xl border-border text-base mb-4"
+        onChange={e => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+        className="w-full border border-gray-300 rounded-xl px-4 py-3.5 text-2xl text-center tracking-[0.5em] outline-none focus:border-[#1877F2] mb-2"
         inputMode="numeric"
       />
 
-      <Button
+      <p className="text-xs text-gray-400 text-center mb-4">
+        (For demo, enter any 5 digits)
+      </p>
+
+      <button
         onClick={handleNext}
-        disabled={code.length !== 5}
-        className="w-full h-12 rounded-full bg-fb-blue hover:bg-fb-blue-dark text-white font-semibold text-base disabled:opacity-50 mb-3"
+        disabled={code.length < 5}
+        className="w-full bg-[#1877F2] text-white font-bold py-3.5 rounded-full text-base disabled:opacity-40 hover:bg-[#166FE5] transition-colors mb-3"
       >
         Next
-      </Button>
+      </button>
 
-      <Button
-        variant="outline"
-        className="w-full h-12 rounded-full border-border text-foreground font-semibold text-base"
-      >
+      <button className="w-full border border-gray-300 text-gray-800 font-semibold py-3.5 rounded-full text-base hover:bg-gray-50 transition-colors">
         I didn't get the code
-      </Button>
+      </button>
     </div>
   );
 }

@@ -1,57 +1,55 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { useRegister } from "@/context/RegisterContext";
 
 export default function NameStep() {
   const navigate = useNavigate();
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
+  const { data, update } = useRegister();
+  const [firstName, setFirstName] = useState(data.firstName || "");
+  const [lastName, setLastName] = useState(data.lastName || "");
 
   const handleNext = () => {
     if (firstName.trim() && lastName.trim()) {
-      localStorage.setItem("reg_first_name", firstName);
-      localStorage.setItem("reg_last_name", lastName);
+      update({ firstName: firstName.trim(), lastName: lastName.trim() });
       navigate("/register/birthday");
     }
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col px-5 py-4">
-      <button onClick={() => navigate("/join")} className="mb-6">
-        <ArrowLeft className="w-6 h-6 text-foreground" />
+    <div className="min-h-screen bg-white flex flex-col px-5 py-4 max-w-md mx-auto">
+      <button onClick={() => navigate("/join")} className="mb-6 self-start">
+        <ArrowLeft className="w-6 h-6 text-gray-800" />
       </button>
 
-      <h1 className="text-2xl font-bold text-foreground mb-2">What's your name?</h1>
-      <p className="text-base text-muted-foreground mb-6">Enter the name you use in real life.</p>
+      <h1 className="text-2xl font-bold text-gray-900 mb-1">What's your name?</h1>
+      <p className="text-gray-500 text-base mb-6">Enter the name you use in real life.</p>
 
       <div className="flex gap-3 mb-4">
-        <Input
+        <input
           placeholder="First name"
           value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
-          className="h-14 rounded-2xl border-border text-base flex-1"
+          onChange={e => setFirstName(e.target.value)}
+          className="flex-1 border border-gray-300 rounded-xl px-4 py-3.5 text-base outline-none focus:border-[#1877F2]"
         />
-        <Input
+        <input
           placeholder="Last name"
           value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
-          className="h-14 rounded-2xl border-border text-base flex-1"
+          onChange={e => setLastName(e.target.value)}
+          className="flex-1 border border-gray-300 rounded-xl px-4 py-3.5 text-base outline-none focus:border-[#1877F2]"
         />
       </div>
 
-      <Button
+      <button
         onClick={handleNext}
         disabled={!firstName.trim() || !lastName.trim()}
-        className="w-full h-12 rounded-full bg-fb-blue hover:bg-fb-blue-dark text-white font-semibold text-base disabled:opacity-50"
+        className="w-full bg-[#1877F2] text-white font-bold py-3.5 rounded-full text-base disabled:opacity-40 hover:bg-[#166FE5] transition-colors"
       >
         Next
-      </Button>
+      </button>
 
       <div className="flex-1" />
-
-      <p className="text-center text-fb-blue font-semibold text-sm cursor-pointer pb-4">
+      <p className="text-center text-[#1877F2] font-semibold text-sm pb-4 cursor-pointer">
         Find my account
       </p>
     </div>

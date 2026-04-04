@@ -5,34 +5,36 @@ export default function Join() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-white flex flex-col px-5 pt-6 pb-8">
-      <button onClick={() => navigate("/")} className="mb-4">
+    <div className="min-h-screen bg-white flex flex-col px-5 pt-5 pb-8 max-w-md mx-auto">
+      <button onClick={() => navigate("/")} className="mb-4 self-start">
         <ArrowLeft className="w-6 h-6 text-gray-800" />
       </button>
 
-      <h1 className="text-3xl font-bold text-gray-900 mb-5">Join Facebook</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-1">Join Facebook</h1>
+      <p className="text-gray-500 text-base mb-6">
+        Create an account to connect with friends, family and communities of people who share your interests.
+      </p>
 
       {/* Illustration */}
-      <div className="rounded-2xl overflow-hidden mb-5" style={{background: 'linear-gradient(135deg, #f8d7d7 0%, #fce4e4 100%)', minHeight: 180}}>
-        <div className="flex items-center justify-center h-44 relative">
-          <div className="flex items-center gap-2">
-            {/* Heart */}
-            <div className="bg-red-400 rounded-full w-14 h-14 flex items-center justify-center text-white text-2xl">❤️</div>
-            {/* Photo frame */}
-            <div className="bg-yellow-400 rounded-lg w-24 h-20 flex items-center justify-center border-4 border-yellow-500">
-              <span className="text-3xl">👨‍👩‍👧</span>
+      <div className="rounded-2xl overflow-hidden mb-8 bg-gradient-to-br from-blue-100 to-teal-100 flex items-center justify-center" style={{height: 200}}>
+        <div className="flex items-end gap-3 px-4">
+          <div className="flex flex-col items-center">
+            <div className="w-14 h-14 rounded-full bg-orange-300 flex items-center justify-center text-2xl mb-1">👦</div>
+            <div className="bg-white rounded-full px-2 py-0.5 text-xs font-bold text-blue-600 flex items-center gap-1">
+              <span>👍</span> Like
             </div>
-            {/* Thumbs up */}
-            <div className="text-5xl">👍</div>
-            {/* Birthday cake */}
-            <div className="absolute top-2 right-8 text-3xl">🎂</div>
+          </div>
+          <div className="flex flex-col items-center mb-4">
+            <div className="w-20 h-20 rounded-xl bg-yellow-200 border-4 border-white shadow flex items-center justify-center text-4xl">🙂</div>
+          </div>
+          <div className="flex flex-col items-center">
+            <div className="w-14 h-14 rounded-full bg-pink-300 flex items-center justify-center text-2xl mb-1">👧</div>
+            <div className="bg-white rounded-full px-2 py-0.5 text-xs font-bold text-red-500 flex items-center gap-1">
+              <span>❤️</span> Love
+            </div>
           </div>
         </div>
       </div>
-
-      <p className="text-gray-700 text-base mb-6 leading-relaxed">
-        Create an account to connect with friends, family and communities of people who share your interests.
-      </p>
 
       <button
         onClick={() => navigate("/register/name")}
