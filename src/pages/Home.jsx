@@ -74,7 +74,11 @@ export default function Home() {
   ];
 
   const [notifCount, setNotifCount] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("fb_notifications") || "[]").filter(n => !n.read).length; } catch { return 0; }
+    try {
+      const uid = currentUser?.id;
+      if (!uid) return 0;
+      return JSON.parse(localStorage.getItem(`fb_notifications_${uid}`) || "[]").filter(n => !n.read).length;
+    } catch { return 0; }
   });
 
   return (

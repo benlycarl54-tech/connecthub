@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ChevronLeft, Search, MoreHorizontal, UserPlus, MessageCircle, Link2, MapPin, Star, Clock, Mail } from "lucide-react";
+import { ChevronLeft, Search, MoreHorizontal, UserPlus, MessageCircle, Link2, MapPin, Star, Clock, Mail, Check } from "lucide-react";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { useFBAuth } from "@/context/AuthContext";
 import { format } from "date-fns";
@@ -19,9 +19,16 @@ const PROFILE_THEMES = [
 export default function UserProfile() {
   const navigate = useNavigate();
   const { userId } = useParams();
-  const { getUserById, currentUser } = useFBAuth();
-  const [following, setFollowing] = useState(false);
+  const { getUserById, currentUser, followUser, isFollowing } = useFBAuth();
+  const [localFollowing, setLocalFollowing] = useState(null);
   const [activeTab, setActiveTab] = useState("All");
+
+  const following = localFollowing !== null ? localFollowing : isFollowing(userId);
+
+  const handleFollow = () => {
+    const nowFollowing = followUser(userId);
+    setLocalFollowing(nowFollowing);
+  };
 
   const user = getUserById(userId);
 
@@ -139,13 +146,13 @@ export default function UserProfile() {
         {!isOwnProfile ? (
           <div className="flex gap-2 mb-4">
             <button
-              onClick={() => setFollowing(!following)}
+              onClick={handleFollow}
               className={`flex-1 font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 text-sm transition-colors ${
                 following ? "bg-gray-100 text-gray-800" : "bg-[#1877F2] text-white"
               }`}
             >
               {following ? (
-                <><span>✓</span> Following</>
+                <><Check className="w-4 h-4" /> Following</>
               ) : (
                 <><UserPlus className="w-4 h-4" /> Follow</>
               )}

@@ -1,20 +1,25 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { Home, Users, PlaySquare, Bell, User } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useFBAuth } from "@/context/AuthContext";
 
-function getNotifCount() {
-  try { return JSON.parse(localStorage.getItem("fb_notifications") || "[]").filter(n => !n.read).length; } catch { return 0; }
+function getNotifCount(userId) {
+  if (!userId) return 0;
+  try { return JSON.parse(localStorage.getItem(`fb_notifications_${userId}`) || "[]").filter(n => !n.read).length; } catch { return 0; }
 }
 
 export default function BottomTabBar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [notifCount, setNotifCount] = useState(getNotifCount);
+  const { currentUser } = useFBAuth();
+  const [notifCount, setNotifCount] = useState(0);
 
   useEffect(() => {
-    const interval = setInterval(() => setNotifCount(getNotifCount()), 2000);
+    const check = () => setNotifCount(getNotifCount(currentUser?.id));
+    check();
+    const interval = setInterval(check, 2000);
     return () => clearInterval(interval);
-  }, []);
+  }, [currentUser?.id]);
 
   const tabs = [
     { Icon: Home, path: "/home", label: "Home" },

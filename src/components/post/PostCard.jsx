@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ThumbsUp, MessageSquare, Share2, X, Send, Play, Volume2, VolumeX } from "lucide-react";
 import VerifiedBadge from "@/components/VerifiedBadge";
-import { useFBAuth } from "@/context/AuthContext";
+import { useFBAuth, pushNotification } from "@/context/AuthContext";
 
 const REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "😡"];
 
@@ -55,6 +55,20 @@ export default function PostCard({ post, authorName, authorAvatar, authorVerifie
     clearTimeout(reactionTimer);
   };
 
+  const sendReactionNotif = (emoji) => {
+    if (!currentUser || !authorId || authorId === currentUser.id || authorId.startsWith("feed_")) return;
+    const typeMap = { "👍": "like", "❤️": "love", "😂": "like", "😮": "like", "😢": "like", "😡": "like" };
+    const textMap = { "👍": "liked", "❤️": "loved", "😂": "reacted 😂 to", "😮": "reacted 😮 to", "😢": "reacted 😢 to", "😡": "reacted 😡 to" };
+    pushNotification(authorId, {
+      type: typeMap[emoji] || "like",
+      text: `${currentUser.firstName} ${currentUser.lastName} ${textMap[emoji] || "liked"} your post.`,
+      avatar: currentUser.profilePicture || null,
+      avatarInitial: currentUser.firstName?.[0] || "?",
+      avatarColor: "bg-[#1877F2]",
+      actorName: `${currentUser.firstName} ${currentUser.lastName}`,
+    });
+  };
+
   const pickReaction = (r) => {
     setShowReactions(false);
     if (reaction === r) {
@@ -63,6 +77,7 @@ export default function PostCard({ post, authorName, authorAvatar, authorVerifie
     } else {
       if (!reaction) setLikesCount(l => l + 1);
       setReaction(r);
+      sendReactionNotif(r);
     }
   };
 
@@ -74,6 +89,7 @@ export default function PostCard({ post, authorName, authorAvatar, authorVerifie
     } else {
       setReaction("👍");
       setLikesCount(l => l + 1);
+      sendReactionNotif("👍");
     }
   };
 
@@ -90,6 +106,17 @@ export default function PostCard({ post, authorName, authorAvatar, authorVerifie
     };
     setComments(prev => [...prev, newComment]);
     setCommentText("");
+    // Notify post author
+    if (currentUser && authorId && authorId !== currentUser.id && !authorId.startsWith("feed_")) {
+      pushNotification(authorId, {
+        type: "comment",
+        text: `${currentUser.firstName} ${currentUser.lastName} commented: "${commentText.trim().slice(0, 40)}${commentText.trim().length > 40 ? "…" : ""}"`,
+        avatar: currentUser.profilePicture || null,
+        avatarInitial: currentUser.firstName?.[0] || "?",
+        avatarColor: "bg-[#1877F2]",
+        actorName: `${currentUser.firstName} ${currentUser.lastName}`,
+      });
+    }
   };
 
   return (

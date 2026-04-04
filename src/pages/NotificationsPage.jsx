@@ -2,49 +2,50 @@ import { useState, useEffect } from "react";
 import { Search, MoreHorizontal } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BottomTabBar from "../components/home/BottomTabBar";
-
-function loadNotifs() {
-  try { return JSON.parse(localStorage.getItem("fb_notifications") || "[]"); } catch { return []; }
-}
+import { useFBAuth } from "@/context/AuthContext";
+import { loadNotificationsForUser, markAllRead } from "@/context/AuthContext";
 
 const WELCOME_NOTIF = {
   id: "welcome",
   type: "welcome",
-  text: "Welcome to Facebook! Tap here to find people you know and add them as friends.",
-  time: "14h",
+  text: "Welcome to Facebook! Tap to find people you know.",
+  time: "Just now",
   read: false,
   isFB: true,
 };
 
+// Icon per notification type
+const TYPE_ICON = {
+  follow: "👤",
+  like: "👍",
+  love: "❤️",
+  comment: "💬",
+  welcome: "📘",
+};
+
 export default function NotificationsPage() {
   const navigate = useNavigate();
+  const { currentUser } = useFBAuth();
   const [notifs, setNotifs] = useState([]);
 
   useEffect(() => {
-    const stored = loadNotifs();
-    const all = [...stored];
-    // Always show welcome if not already present
+    if (!currentUser) return;
+    const stored = loadNotificationsForUser(currentUser.id);
+    const all = stored.length ? stored : [WELCOME_NOTIF];
     if (!all.find(n => n.id === "welcome")) all.push(WELCOME_NOTIF);
     setNotifs(all);
-    // Mark all as read
-    const updated = stored.map(n => ({ ...n, read: true }));
-    localStorage.setItem("fb_notifications", JSON.stringify(updated));
-  }, []);
+    markAllRead(currentUser.id);
+  }, [currentUser?.id]);
 
-  const newNotifs = notifs.filter(n => !n.read || n.id === "welcome");
-  const earlierNotifs = notifs.filter(n => n.read && n.id !== "welcome");
+  const newNotifs = notifs.filter(n => !n.read);
+  const earlierNotifs = notifs.filter(n => n.read);
 
   return (
     <div className="min-h-screen bg-white max-w-md mx-auto pb-20">
       {/* Header */}
       <div className="bg-white sticky top-0 z-30 px-4 pt-4 pb-3 border-b border-gray-100">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button className="w-8 h-8 flex items-center justify-center">
-              <span className="text-xl font-bold text-gray-800">☰</span>
-            </button>
-            <h1 className="text-xl font-bold text-gray-900">Notifications</h1>
-          </div>
+          <h1 className="text-xl font-bold text-gray-900">Notifications</h1>
           <button onClick={() => navigate("/search")} className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center">
             <Search className="w-5 h-5 text-gray-800" />
           </button>
@@ -52,19 +53,17 @@ export default function NotificationsPage() {
       </div>
 
       <div className="px-4 pt-4">
-        {/* New section */}
         {newNotifs.length > 0 && (
           <div className="mb-4">
             <p className="font-bold text-gray-900 mb-2">New</p>
             <div className="space-y-1">
               {newNotifs.map((n, i) => (
-                <NotifItem key={n.id || i} notif={n} onClick={() => navigate("/friends")} />
+                <NotifItem key={n.id || i} notif={n} onClick={() => n.type === "follow" ? navigate("/friends") : {}} />
               ))}
             </div>
           </div>
         )}
 
-        {/* Earlier section */}
         {earlierNotifs.length > 0 && (
           <div>
             <p className="font-bold text-gray-900 mb-2">Earlier</p>
@@ -80,6 +79,7 @@ export default function NotificationsPage() {
           <div className="flex flex-col items-center justify-center py-24">
             <span className="text-5xl mb-4">🔔</span>
             <p className="font-bold text-gray-900">No notifications yet</p>
+            <p className="text-sm text-gray-500 mt-1">When someone likes, comments, or follows you, you'll see it here.</p>
           </div>
         )}
       </div>
@@ -90,6 +90,8 @@ export default function NotificationsPage() {
 }
 
 function NotifItem({ notif, onClick }) {
+  const icon = TYPE_ICON[notif.type] || "🔔";
+
   return (
     <div
       className={`flex items-center gap-3 px-2 py-3 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors ${!notif.read ? "bg-[#EBF5FF]" : ""}`}
@@ -104,18 +106,21 @@ function NotifItem({ notif, onClick }) {
         ) : notif.avatar ? (
           <img src={notif.avatar} className="w-14 h-14 rounded-full object-cover" alt="" />
         ) : (
-          <div className={`w-14 h-14 rounded-full ${notif.bg || "bg-[#1877F2]"} flex items-center justify-center`}>
-            <span className="text-white font-bold text-xl">{notif.text?.[0]}</span>
+          <div className={`w-14 h-14 rounded-full ${notif.avatarColor || "bg-[#1877F2]"} flex items-center justify-center`}>
+            <span className="text-white font-bold text-xl">{notif.avatarInitial || "?"}</span>
           </div>
         )}
-        {/* Bell badge */}
-        <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 bg-[#1877F2] rounded-full flex items-center justify-center border-2 border-white">
-          <span className="text-white text-[10px]">🔔</span>
+        {/* Type badge */}
+        <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 bg-[#1877F2] rounded-full flex items-center justify-center border-2 border-white text-[11px]">
+          {icon}
         </div>
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-gray-900 leading-snug">{notif.text}</p>
+        <p className="text-sm text-gray-900 leading-snug">
+          {notif.actorName && <span className="font-bold">{notif.actorName} </span>}
+          <span>{notif.actorName ? notif.text.replace(notif.actorName + " ", "") : notif.text}</span>
+        </p>
         <p className={`text-xs mt-1 font-semibold ${!notif.read ? "text-[#1877F2]" : "text-gray-400"}`}>{notif.time}</p>
       </div>
 

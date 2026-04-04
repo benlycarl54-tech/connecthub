@@ -3,8 +3,29 @@ import { FEED_USERS, getFeedUserById } from "@/data/feedUsers.js";
 
 const FBAuthContext = createContext(null);
 
-// All registered accounts stored in localStorage as "fbAccounts" array
-// Current logged-in user stored as "fbCurrentUser"
+// ── Notification helpers ──────────────────────────────────────────────
+export function pushNotification(targetUserId, notif) {
+  // Stores notifications keyed by user id so every user has their own inbox
+  const key = `fb_notifications_${targetUserId}`;
+  try {
+    const existing = JSON.parse(localStorage.getItem(key) || "[]");
+    const updated = [{ ...notif, id: Date.now().toString(), read: false, time: "Just now" }, ...existing].slice(0, 50);
+    localStorage.setItem(key, JSON.stringify(updated));
+  } catch { /* noop */ }
+}
+
+export function loadNotificationsForUser(userId) {
+  try { return JSON.parse(localStorage.getItem(`fb_notifications_${userId}`) || "[]"); } catch { return []; }
+}
+
+export function markAllRead(userId) {
+  const key = `fb_notifications_${userId}`;
+  try {
+    const notifs = JSON.parse(localStorage.getItem(key) || "[]");
+    localStorage.setItem(key, JSON.stringify(notifs.map(n => ({ ...n, read: true }))));
+  } catch { /* noop */ }
+}
+// ─────────────────────────────────────────────────────────────────────
 
 export function FBAuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(() => {
@@ -30,8 +51,11 @@ export function FBAuthProvider({ children }) {
       likes: 0,
       is_verified: false,
       is_admin: false,
+      is_banned: false,
       created_date: new Date().toISOString(),
     };
+    // First ever account becomes admin
+    if (accounts.length === 0) newAccount.is_admin = true;
     accounts.push(newAccount);
     saveAccounts(accounts);
     localStorage.setItem("fbCurrentUser", JSON.stringify(newAccount));
@@ -44,12 +68,11 @@ export function FBAuthProvider({ children }) {
     const user = accounts.find(a =>
       (a.emailAddress === identifier || a.mobileNumber === identifier) && a.password === password
     );
-    if (user) {
-      localStorage.setItem("fbCurrentUser", JSON.stringify(user));
-      setCurrentUser(user);
-      return { success: true };
-    }
-    return { success: false, error: "No account found with these credentials. Please create an account first." };
+    if (!user) return { success: false, error: "No account found with these credentials. Please create an account first." };
+    if (user.is_banned) return { success: false, error: "This account has been suspended. Please contact support." };
+    localStorage.setItem("fbCurrentUser", JSON.stringify(user));
+    setCurrentUser(user);
+    return { success: true };
   };
 
   const logout = () => {
@@ -67,6 +90,58 @@ export function FBAuthProvider({ children }) {
       localStorage.setItem("fbCurrentUser", JSON.stringify(updated));
       setCurrentUser(updated);
     }
+  };
+
+  // Follow / unfollow a user and push a notification to them
+  const followUser = (targetUserId) => {
+    if (!currentUser) return;
+    const followKey = `fb_following_${currentUser.id}`;
+    const following = JSON.parse(localStorage.getItem(followKey) || "[]");
+    const alreadyFollowing = following.includes(targetUserId);
+
+    if (alreadyFollowing) {
+      // Unfollow
+      const updated = following.filter(id => id !== targetUserId);
+      localStorage.setItem(followKey, JSON.stringify(updated));
+      updateCurrentUser({ following: Math.max(0, (currentUser.following || 0) - 1) });
+      // Decrement target's followers
+      adminUpdateUser(targetUserId, {});
+    } else {
+      // Follow
+      following.push(targetUserId);
+      localStorage.setItem(followKey, JSON.stringify(following));
+      updateCurrentUser({ following: (currentUser.following || 0) + 1 });
+      // Increment target followers
+      const accounts = getAccounts();
+      const tIdx = accounts.findIndex(a => a.id === targetUserId);
+      if (tIdx !== -1) {
+        accounts[tIdx] = { ...accounts[tIdx], followers: (accounts[tIdx].followers || 0) + 1 };
+        saveAccounts(accounts);
+        if (currentUser.id === targetUserId) {
+          localStorage.setItem("fbCurrentUser", JSON.stringify(accounts[tIdx]));
+          setCurrentUser(accounts[tIdx]);
+        }
+      }
+      // Push notification to target
+      pushNotification(targetUserId, {
+        type: "follow",
+        text: `${currentUser.firstName} ${currentUser.lastName} started following you.`,
+        avatar: currentUser.profilePicture || null,
+        avatarInitial: currentUser.firstName?.[0] || "?",
+        avatarColor: "bg-[#1877F2]",
+        actorName: `${currentUser.firstName} ${currentUser.lastName}`,
+        icon: "👤",
+      });
+    }
+
+    return !alreadyFollowing;
+  };
+
+  const isFollowing = (targetUserId) => {
+    if (!currentUser) return false;
+    const followKey = `fb_following_${currentUser.id}`;
+    const following = JSON.parse(localStorage.getItem(followKey) || "[]");
+    return following.includes(targetUserId);
   };
 
   const getAllUsers = () => [...getAccounts(), ...FEED_USERS];
@@ -89,14 +164,12 @@ export function FBAuthProvider({ children }) {
     return [...accountMatches, ...feedMatches];
   };
 
-  // Admin: update any user
   const adminUpdateUser = (userId, updates) => {
     const accounts = getAccounts();
     const idx = accounts.findIndex(a => a.id === userId);
     if (idx !== -1) {
       accounts[idx] = { ...accounts[idx], ...updates };
       saveAccounts(accounts);
-      // If editing current user, sync
       if (currentUser?.id === userId) {
         localStorage.setItem("fbCurrentUser", JSON.stringify(accounts[idx]));
         setCurrentUser(accounts[idx]);
@@ -105,7 +178,11 @@ export function FBAuthProvider({ children }) {
   };
 
   return (
-    <FBAuthContext.Provider value={{ currentUser, register, login, logout, updateCurrentUser, getAllUsers, getUserById, searchUsers, adminUpdateUser }}>
+    <FBAuthContext.Provider value={{
+      currentUser, register, login, logout,
+      updateCurrentUser, getAllUsers, getUserById, searchUsers,
+      adminUpdateUser, followUser, isFollowing,
+    }}>
       {children}
     </FBAuthContext.Provider>
   );
