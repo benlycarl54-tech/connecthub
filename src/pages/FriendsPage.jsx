@@ -207,7 +207,6 @@ export default function FriendsPage() {
         </div>
       )}
 
-      <BottomTabBar />
     </div>
   );
 }
