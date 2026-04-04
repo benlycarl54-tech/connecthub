@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Home as HomeIcon, Users, PlaySquare, Bell, Menu, Search, Plus, MessageCircle, X, ThumbsUp, MessageSquare, Share2, Shield } from "lucide-react";
+import { Home as HomeIcon, Users, PlaySquare, Bell, Menu, Search, Plus, MessageCircle, Shield } from "lucide-react";
 import { useRegister } from "../context/RegisterContext";
 import { useFBAuth } from "../context/AuthContext";
 import { FEED_POSTS } from "../data/feedPosts";
+import PostCard from "../components/post/PostCard";
 
 const STORIES = [
   { name: "Your Story", bg: "bg-gray-300", isYours: true },
@@ -13,85 +14,6 @@ const STORIES = [
   { name: "Linda S.", bg: "bg-purple-400", img: "https://media.base44.com/images/public/69d064686cc19a99ff8b2dc7/ca1e07b51_73559b69b620d54a4498159de7c42056.jpg" },
 ];
 
-function PostCard({ post }) {
-  const [liked, setLiked] = useState(false);
-  const [likesCount, setLikesCount] = useState(post.likes);
-
-  const toggleLike = () => {
-    setLiked(!liked);
-    setLikesCount(liked ? likesCount - 1 : likesCount + 1);
-  };
-
-  return (
-    <div className="bg-white mb-2 shadow-sm">
-      {/* Post header */}
-      <div className="flex items-center justify-between px-4 pt-3 pb-2">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden flex-shrink-0">
-            <img src={post.avatar} alt={post.name} className="w-full h-full object-cover" />
-          </div>
-          <div>
-            <p className="font-semibold text-gray-900 text-sm leading-tight">{post.name}</p>
-            <div className="flex items-center gap-1 text-xs text-gray-500">
-              <span>{post.time}</span>
-              <span>·</span>
-              <span>{post.privacy}</span>
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-1">
-          <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 font-bold text-lg">···</button>
-          <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">
-            <X className="w-4 h-4 text-gray-500" />
-          </button>
-        </div>
-      </div>
-
-      {/* Post content */}
-      {post.content && (
-        <p className="px-4 pb-2 text-sm text-gray-900 leading-relaxed">{post.content}</p>
-      )}
-
-      {/* Post image */}
-      {post.image && (
-        <img src={post.image} alt="post" className="w-full object-cover" style={{maxHeight: 360}} />
-      )}
-
-      {/* Reaction summary */}
-      <div className="px-4 py-2 flex items-center justify-between">
-        <div className="flex items-center gap-1">
-          <span className="text-sm">{post.reactions}</span>
-          <span className="text-xs text-gray-500 ml-1">{likesCount}</span>
-        </div>
-        <div className="text-xs text-gray-500">
-          {post.comments} comments · {post.shares} shares
-        </div>
-      </div>
-
-      {/* Divider */}
-      <div className="mx-4 border-t border-gray-100" />
-
-      {/* Action buttons */}
-      <div className="flex px-1 py-1">
-        <button
-          onClick={toggleLike}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg hover:bg-gray-100 transition-colors ${liked ? "text-[#1877F2]" : "text-gray-500"}`}
-        >
-          <ThumbsUp className={`w-5 h-5 ${liked ? "fill-[#1877F2] text-[#1877F2]" : ""}`} />
-          <span className="text-sm font-semibold">Like</span>
-        </button>
-        <button className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
-          <MessageSquare className="w-5 h-5" />
-          <span className="text-sm font-semibold">Comment</span>
-        </button>
-        <button className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
-          <Share2 className="w-5 h-5" />
-          <span className="text-sm font-semibold">Share</span>
-        </button>
-      </div>
-    </div>
-  );
-}
 
 export default function Home() {
   const navigate = useNavigate();
@@ -223,6 +145,7 @@ export default function Home() {
         {FEED_POSTS.map(post => (
           <PostCard key={post.id} post={post} />
         ))}
+
       </div>
     </div>
   );

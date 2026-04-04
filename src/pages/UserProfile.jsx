@@ -1,9 +1,19 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ChevronLeft, Search, MoreHorizontal, UserPlus, MessageCircle, ChevronDown } from "lucide-react";
+import { ChevronLeft, Search, MoreHorizontal, UserPlus, MessageCircle, Bell, Link2, MapPin, Star, DollarSign, Clock, Mail } from "lucide-react";
 import { useFBAuth } from "@/context/AuthContext";
 import { format } from "date-fns";
 import { FEED_POSTS } from "@/data/feedPosts";
+import PostCard from "@/components/post/PostCard";
+
+// Each user gets a distinct profile style/theme
+const PROFILE_THEMES = [
+  { cover: "from-blue-400 to-blue-700", ring: "ring-blue-400", badge: "Rising creator", badgeIcon: "🌅", badgeColor: "bg-orange-400", badge2: "Fan favorite", badge2Icon: "⭐", badge2Color: "bg-orange-300", category: "Digital creator", bio: "IT'S MY OFFICIAL PAGE GUYS\nI LOVE ❤️❤️ YOU GUYS ❤️❤️" },
+  { cover: "from-teal-400 to-emerald-600", ring: "ring-teal-400", badge: "Gaming creator", badgeIcon: "🎮", badgeColor: "bg-green-500", badge2: "Top fan", badge2Icon: "🏆", badge2Color: "bg-yellow-400", category: "Gaming video creator", bio: "👉 Learn how I make viral content\nAlways creating something new! 🚀" },
+  { cover: "from-purple-500 to-pink-600", ring: "ring-purple-400", badge: "Comedian", badgeIcon: "😂", badgeColor: "bg-pink-500", badge2: "Community fav", badge2Icon: "💫", badge2Color: "bg-purple-400", category: "Comedian", bio: "Welcome to my page 💎\nI'm with you spiritually 💎" },
+  { cover: "from-green-500 to-teal-700", ring: "ring-green-400", badge: "Content creator", badgeIcon: "✏️", badgeColor: "bg-teal-500", badge2: "Top rated", badge2Icon: "🌟", badge2Color: "bg-green-400", category: "Content creator", bio: "Content creator\nGraphics designer... See more" },
+  { cover: "from-red-500 to-orange-600", ring: "ring-red-400", badge: "Verified creator", badgeIcon: "🔥", badgeColor: "bg-red-500", badge2: "Top comedian", badge2Icon: "😄", badge2Color: "bg-orange-400", category: "Comedian", bio: "Dedicated to bringing you fresh content daily.\nStay tuned! 📱" },
+];
 
 export default function UserProfile() {
   const navigate = useNavigate();
@@ -28,100 +38,129 @@ export default function UserProfile() {
   const fullName = `${user.firstName} ${user.lastName}`;
   const birthday = user.birthday ? new Date(user.birthday) : null;
 
-  // Use posts from this "user" — show a couple from feed matching vibe or generic
-  const userPosts = FEED_POSTS.slice(0, 3);
+  // Pick a unique theme based on user id hash
+  const themeIdx = (parseInt(user.id?.slice(-3) || "0", 10) || 0) % PROFILE_THEMES.length;
+  const theme = PROFILE_THEMES[themeIdx];
+
+  // Use posts from the feed, assigned to this user
+  const userPosts = FEED_POSTS.filter((_, i) => i % PROFILE_THEMES.length === themeIdx).slice(0, 4);
+  const displayPosts = userPosts.length ? userPosts : FEED_POSTS.slice(themeIdx, themeIdx + 3);
+
+  const formatCount = (n) => {
+    if (!n) return "0";
+    if (n >= 1000000) return (n / 1000000).toFixed(1) + "M";
+    if (n >= 1000) return (n / 1000).toFixed(1) + "K";
+    return n.toString();
+  };
 
   return (
     <div className="min-h-screen bg-[#F0F2F5] max-w-md mx-auto">
-      {/* Top nav */}
-      <div className="flex items-center justify-between px-3 py-2 sticky top-0 z-40 bg-[#F0F2F5]">
-        <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center">
-          <ChevronLeft className="w-6 h-6 text-gray-800" />
+      {/* Top nav — overlaid on cover */}
+      <div className="flex items-center justify-between px-3 py-2 sticky top-0 z-40">
+        <button onClick={() => navigate(-1)} className="w-9 h-9 bg-black/30 rounded-full flex items-center justify-center backdrop-blur-sm">
+          <ChevronLeft className="w-6 h-6 text-white" />
         </button>
         <div className="flex items-center gap-2">
-          <button className="w-9 h-9 bg-white rounded-full flex items-center justify-center shadow">
-            <Search className="w-5 h-5 text-gray-700" />
+          <button onClick={() => navigate("/search")} className="w-9 h-9 bg-black/30 rounded-full flex items-center justify-center backdrop-blur-sm">
+            <Search className="w-5 h-5 text-white" />
           </button>
-          <button className="w-9 h-9 bg-white rounded-full flex items-center justify-center shadow">
-            <MoreHorizontal className="w-5 h-5 text-gray-700" />
+          <button className="w-9 h-9 bg-black/30 rounded-full flex items-center justify-center backdrop-blur-sm">
+            <MoreHorizontal className="w-5 h-5 text-white" />
           </button>
         </div>
       </div>
 
-      {/* Profile card */}
-      <div className="bg-white">
-        {/* Cover */}
-        <div className="w-full h-40 bg-gradient-to-br from-blue-200 to-blue-400" />
+      {/* Cover photo */}
+      <div className={`w-full h-52 bg-gradient-to-br ${theme.cover} -mt-14`}>
+        {user.profilePicture && (
+          <img src={user.profilePicture} alt="cover" className="w-full h-full object-cover opacity-50" />
+        )}
+      </div>
 
-        <div className="px-4 pb-4">
-          {/* Avatar + name row */}
-          <div className="flex items-end justify-between -mt-12 mb-2">
-            <div className="w-24 h-24 rounded-full border-4 border-white overflow-hidden bg-gray-300 shadow">
-              {user.profilePicture ? (
-                <img src={user.profilePicture} alt={fullName} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full bg-[#1877F2] flex items-center justify-center">
-                  <span className="text-white text-3xl font-bold">{user.firstName?.[0]}</span>
-                </div>
-              )}
-            </div>
-            <button className="flex items-center gap-1 bg-gray-100 px-3 py-1.5 rounded-full">
-              <ChevronDown className="w-4 h-4 text-gray-700" />
-            </button>
-          </div>
-
-          {/* Name & stats */}
-          <div className="flex items-center gap-1.5 mb-0.5">
-            <h1 className="text-xl font-bold text-gray-900">{fullName}</h1>
-            {user.is_verified && (
-              <div className="w-5 h-5 bg-[#1877F2] rounded-full flex items-center justify-center">
-                <span className="text-white text-xs font-bold">✓</span>
+      {/* Profile card — white card overlapping cover */}
+      <div className="bg-white mx-0 rounded-t-3xl -mt-6 px-4 pt-4 pb-0 shadow-sm">
+        <div className="flex items-start gap-4 mb-3">
+          {/* Avatar with colored ring */}
+          <div className={`w-20 h-20 rounded-full border-4 border-white ring-4 ${theme.ring} overflow-hidden bg-gray-300 shadow-lg flex-shrink-0 -mt-14`}>
+            {user.profilePicture ? (
+              <img src={user.profilePicture} alt={fullName} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-[#1877F2] flex items-center justify-center">
+                <span className="text-white text-3xl font-bold">{user.firstName?.[0]}</span>
               </div>
             )}
           </div>
-          <p className="text-sm text-gray-500 mb-3">
-            {user.followers || 0} followers · {user.following || 0} following · {user.likes || 0} likes
-          </p>
 
-          {/* Action buttons */}
-          {!isOwnProfile ? (
-            <div className="flex gap-2">
-              <button
-                onClick={() => setFollowing(!following)}
-                className={`flex-1 font-semibold py-2 rounded-lg flex items-center justify-center gap-1.5 text-sm transition-colors ${
-                  following ? "bg-gray-100 text-gray-800" : "bg-[#1877F2] text-white"
-                }`}
-              >
-                {following ? (
-                  <><span>✓</span> Following</>
-                ) : (
-                  <><UserPlus className="w-4 h-4" /> Follow</>
-                )}
-              </button>
-              <button className="flex-1 bg-gray-100 text-gray-800 font-semibold py-2 rounded-lg flex items-center justify-center gap-1.5 text-sm">
-                <MessageCircle className="w-4 h-4" /> Message
-              </button>
+          {/* Name & stats */}
+          <div className="flex-1 pt-1">
+            <div className="flex items-center gap-1.5">
+              <h1 className="text-lg font-bold text-gray-900 leading-tight">{fullName}</h1>
+              {user.is_verified && (
+                <div className="w-5 h-5 bg-[#1877F2] rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-white text-[10px] font-bold">✓</span>
+                </div>
+              )}
             </div>
-          ) : (
-            <button
-              onClick={() => navigate("/profile")}
-              className="w-full bg-gray-100 text-gray-800 font-semibold py-2 rounded-lg text-sm"
-            >
-              View your profile
-            </button>
+            <p className="text-xs text-gray-500 mt-0.5">
+              {formatCount(user.followers)} followers · {formatCount(user.following)} following · {formatCount(user.likes || 0)} likes
+            </p>
+          </div>
+        </div>
+
+        {/* Page type & bio */}
+        <p className="text-xs text-gray-400 mb-1">Page · {theme.category}</p>
+        {theme.bio && (
+          <p className="text-sm text-gray-800 mb-3 whitespace-pre-line">{theme.bio}</p>
+        )}
+
+        {/* Category badge row */}
+        <div className="flex items-center gap-2 mb-4 flex-wrap">
+          <span className="flex items-center gap-1 text-xs text-gray-600 bg-gray-100 rounded-full px-2 py-1">
+            🎬 {theme.category}
+          </span>
+          {user.mobileNumber && (
+            <span className="flex items-center gap-1 text-xs text-gray-600 bg-gray-100 rounded-full px-2 py-1">
+              📱 {user.mobileNumber}
+            </span>
           )}
         </div>
 
+        {/* Action buttons */}
+        {!isOwnProfile ? (
+          <div className="flex gap-2 mb-4">
+            <button
+              onClick={() => setFollowing(!following)}
+              className={`flex-1 font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 text-sm transition-colors ${
+                following ? "bg-gray-100 text-gray-800" : "bg-[#1877F2] text-white"
+              }`}
+            >
+              {following ? (
+                <><span>✓</span> Following</>
+              ) : (
+                <><UserPlus className="w-4 h-4" /> Follow</>
+              )}
+            </button>
+            <button className="flex-1 bg-gray-100 text-gray-800 font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 text-sm">
+              <MessageCircle className="w-4 h-4" /> Message
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => navigate("/profile")}
+            className="w-full mb-4 bg-gray-100 text-gray-800 font-bold py-2.5 rounded-lg text-sm"
+          >
+            View your profile
+          </button>
+        )}
+
         {/* Tabs */}
-        <div className="flex border-t border-gray-200 px-2">
+        <div className="flex border-t border-gray-100 -mx-4 px-2">
           {["All", "Photos", "Reels", "Mentions"].map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`px-3 py-3 text-sm font-semibold transition-colors ${
-                activeTab === tab
-                  ? "text-[#1877F2] border-b-2 border-[#1877F2]"
-                  : "text-gray-500"
+                activeTab === tab ? "text-[#1877F2] border-b-2 border-[#1877F2]" : "text-gray-500"
               }`}
             >
               {tab}
@@ -130,68 +169,98 @@ export default function UserProfile() {
         </div>
       </div>
 
-      {/* Details */}
+      {/* Badges section */}
+      <div className="bg-white mt-2 px-4 py-4">
+        <h2 className="font-bold text-base text-gray-900 mb-3">Badges</h2>
+        <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 ${theme.badgeColor} rounded-full flex items-center justify-center text-xl flex-shrink-0`}>
+              {theme.badgeIcon}
+            </div>
+            <span className="font-semibold text-gray-800 text-sm">{theme.badge}</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 ${theme.badge2Color} rounded-full flex items-center justify-center text-xl flex-shrink-0`}>
+              {theme.badge2Icon}
+            </div>
+            <span className="font-semibold text-gray-800 text-sm">{theme.badge2}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Details section */}
       <div className="bg-white mt-2 px-4 py-4">
         <h2 className="font-bold text-base text-gray-900 mb-3">Details</h2>
         {birthday && (
-          <div className="flex items-center gap-3 mb-2">
-            <span className="text-xl">🎂</span>
-            <span className="text-gray-700 text-sm">{format(birthday, "MMMM d, yyyy")}</span>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-8 h-8 border border-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-base">🎂</span>
+            </div>
+            <span className="text-gray-700 text-sm">{format(birthday, "MMMM d")}</span>
           </div>
         )}
-        <div className="flex items-center gap-3 mb-2">
-          <span className="text-xl">📅</span>
-          <span className="text-gray-700 text-sm">Joined {new Date(user.created_date || Date.now()).getFullYear()}</span>
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-8 h-8 border border-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
+            <Star className="w-4 h-4 text-gray-500" />
+          </div>
+          <span className="text-gray-700 text-sm">100% recommend</span>
+        </div>
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-8 h-8 border border-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
+            <Clock className="w-4 h-4 text-gray-500" />
+          </div>
+          <span className="text-gray-700 text-sm">Always open</span>
         </div>
         {user.gender && (
           <div className="flex items-center gap-3">
-            <span className="text-xl">👤</span>
+            <div className="w-8 h-8 border border-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-base">👤</span>
+            </div>
             <span className="text-gray-700 text-sm capitalize">{user.gender}</span>
           </div>
         )}
       </div>
 
-      {/* Posts */}
-      <div className="bg-white mt-2 px-4 py-3">
-        <h2 className="font-bold text-base text-gray-900 mb-3">All posts</h2>
+      {/* Links & Contact */}
+      <div className="bg-white mt-2 px-4 py-4">
+        <h2 className="font-bold text-base text-gray-900 mb-3">Links</h2>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-8 h-8 border border-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
+            <Link2 className="w-4 h-4 text-gray-500" />
+          </div>
+          <span className="text-[#1877F2] text-sm">{fullName.replace(" ", "")}'s Page</span>
+        </div>
+        <h2 className="font-bold text-base text-gray-900 mb-3">Contact info</h2>
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-8 h-8 border border-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
+            <Mail className="w-4 h-4 text-gray-500" />
+          </div>
+          <span className="text-gray-700 text-sm">{user.emailAddress || `${user.firstName?.toLowerCase()}@example.com`}</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 border border-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
+            <MessageCircle className="w-4 h-4 text-gray-500" />
+          </div>
+          <span className="text-gray-700 text-sm">{fullName}</span>
+        </div>
       </div>
 
-      {userPosts.map(post => (
-        <div key={post.id} className="bg-white mb-2 shadow-sm">
-          <div className="flex items-center justify-between px-4 pt-3 pb-2">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-300">
-                {user.profilePicture ? (
-                  <img src={user.profilePicture} alt={fullName} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full bg-[#1877F2] flex items-center justify-center">
-                    <span className="text-white font-bold">{user.firstName?.[0]}</span>
-                  </div>
-                )}
-              </div>
-              <div>
-                <div className="flex items-center gap-1">
-                  <span className="font-semibold text-gray-900 text-sm">{fullName}</span>
-                  {user.is_verified && (
-                    <div className="w-4 h-4 bg-[#1877F2] rounded-full flex items-center justify-center">
-                      <span className="text-white text-[9px] font-bold">✓</span>
-                    </div>
-                  )}
-                </div>
-                <p className="text-xs text-gray-500">{post.time} · {post.privacy}</p>
-              </div>
-            </div>
-            <MoreHorizontal className="w-5 h-5 text-gray-500" />
-          </div>
-          <p className="px-4 pb-2 text-sm text-gray-900">{post.content}</p>
-          {post.image && <img src={post.image} alt="post" className="w-full object-cover" style={{maxHeight: 320}} />}
-          <div className="flex px-1 py-1 border-t border-gray-100">
-            <button className="flex-1 flex items-center justify-center gap-1.5 py-2 text-gray-500 hover:bg-gray-100 rounded-lg text-sm font-semibold">👍 Like</button>
-            <button className="flex-1 flex items-center justify-center gap-1.5 py-2 text-gray-500 hover:bg-gray-100 rounded-lg text-sm font-semibold">💬 Comment</button>
-            <button className="flex-1 flex items-center justify-center gap-1.5 py-2 text-gray-500 hover:bg-gray-100 rounded-lg text-sm font-semibold">↗️ Share</button>
-          </div>
-        </div>
+      {/* All posts */}
+      <div className="bg-white mt-2 px-4 py-3">
+        <h2 className="font-bold text-base text-gray-900">All posts</h2>
+      </div>
+
+      {displayPosts.map(post => (
+        <PostCard
+          key={post.id}
+          post={post}
+          authorName={fullName}
+          authorAvatar={user.profilePicture}
+          authorVerified={user.is_verified}
+        />
       ))}
+
+      <div className="h-6" />
     </div>
   );
 }
