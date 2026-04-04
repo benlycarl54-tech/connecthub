@@ -66,13 +66,11 @@ export default function SearchPage() {
                 return (
                   <div
                     key={user.id}
-                    className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
+                    onClick={() => isMe ? navigate("/profile") : navigate(`/user/${user.id}`)}
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer"
                   >
-                    {/* Avatar — tap to view profile */}
-                    <button
-                      onClick={() => isMe ? navigate("/profile") : navigate(`/user/${user.id}`)}
-                      className="w-12 h-12 rounded-full bg-gray-300 overflow-hidden flex-shrink-0"
-                    >
+                    {/* Avatar */}
+                    <div className="w-12 h-12 rounded-full bg-gray-300 overflow-hidden flex-shrink-0">
                       {user.profilePicture ? (
                         <img src={user.profilePicture} alt={user.firstName} className="w-full h-full object-cover" />
                       ) : (
@@ -80,12 +78,11 @@ export default function SearchPage() {
                           <span className="text-white font-bold text-lg">{user.firstName?.[0]}</span>
                         </div>
                       )}
-                    </button>
+                    </div>
 
                     {/* Info */}
-                    <button
+                    <div
                       className="flex-1 text-left"
-                      onClick={() => isMe ? navigate("/profile") : navigate(`/user/${user.id}`)}
                     >
                       <div className="flex items-center gap-1">
                         <span className="font-semibold text-gray-900 text-sm">{user.firstName} {user.lastName}</span>
@@ -95,12 +92,12 @@ export default function SearchPage() {
                       <p className="text-xs text-gray-500">
                         {user.username ? `@${user.username} · ` : ""}{(user.followers || 0).toLocaleString()} followers
                       </p>
-                    </button>
+                    </div>
 
                     {/* Follow button — only for other users */}
                     {!isMe && (
-                      <button
-                        onClick={(e) => handleFollow(e, user)}
+                     <button
+                       onClick={(e) => { e.stopPropagation(); handleFollow(e, user); }}
                         className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${
                           following
                             ? "bg-gray-100 text-gray-700"
