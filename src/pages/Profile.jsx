@@ -319,6 +319,18 @@ export default function Profile() {
         )}
       </div>
 
+      {/* Interests/Hobbies */}
+      {(currentUser?.hobbies?.length > 0 || currentUser?.music?.length > 0 || currentUser?.sports?.length > 0) && (
+        <div className="bg-white mt-2 px-4 py-4">
+          <h2 className="font-bold text-base text-gray-900 mb-3">Interests</h2>
+          <div className="flex flex-wrap gap-2">
+            {[...(currentUser?.hobbies || []), ...(currentUser?.music || []), ...(currentUser?.sports || [])].map((interest, i) => (
+              <span key={i} className="px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-900">{interest}</span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Friends */}
       <div className="bg-white mt-2 px-4 py-4">
         <div className="flex items-center justify-between">
