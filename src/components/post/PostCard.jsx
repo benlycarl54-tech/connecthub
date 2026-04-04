@@ -25,7 +25,7 @@ function getInitialComments(postId, count) {
   }));
 }
 
-export default function PostCard({ post, authorName, authorAvatar, authorVerified, authorColor, authorId }) {
+export default function PostCard({ post, authorName, authorAvatar, authorVerified, authorColor, authorId: authorIdProp }) {
   const { currentUser } = useFBAuth();
   const navigate = useNavigate();
   const [liked, setLiked] = useState(false);
@@ -37,6 +37,7 @@ export default function PostCard({ post, authorName, authorAvatar, authorVerifie
   const [commentText, setCommentText] = useState("");
   const [reactionTimer, setReactionTimer] = useState(null);
 
+  const authorId = authorIdProp || post.authorId;
   const name = authorName || post.name;
   const avatar = authorAvatar || post.avatar;
   const verified = authorVerified || post.verified;

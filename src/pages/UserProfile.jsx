@@ -4,6 +4,7 @@ import { ChevronLeft, Search, MoreHorizontal, UserPlus, MessageCircle, Bell, Lin
 import { useFBAuth } from "@/context/AuthContext";
 import { format } from "date-fns";
 import { FEED_POSTS } from "@/data/feedPosts";
+import { FEED_USERS } from "@/data/feedUsers";
 import PostCard from "@/components/post/PostCard";
 
 // Each user gets a distinct profile style/theme
@@ -39,11 +40,19 @@ export default function UserProfile() {
   const birthday = user.birthday ? new Date(user.birthday) : null;
 
   // Pick a unique theme based on user id hash
-  const themeIdx = (parseInt(user.id?.slice(-3) || "0", 10) || 0) % PROFILE_THEMES.length;
+  const idNum = user.id?.startsWith("feed_")
+    ? parseInt(user.id.replace("feed_", ""), 10)
+    : parseInt(user.id?.slice(-3) || "0", 10) || 0;
+  const themeIdx = (idNum || 0) % PROFILE_THEMES.length;
   const theme = PROFILE_THEMES[themeIdx];
 
-  // Use posts from the feed, assigned to this user
-  const userPosts = FEED_POSTS.filter((_, i) => i % PROFILE_THEMES.length === themeIdx).slice(0, 4);
+  // Use the user's own bio/category/location if available
+  const displayCategory = user.category || theme.category;
+  const displayBio = user.bio || theme.bio;
+  const displayLocation = user.location || null;
+
+  // Use posts from the feed that belong to this user
+  const userPosts = FEED_POSTS.filter(p => p.authorId === user.id);
   const displayPosts = userPosts.length ? userPosts : FEED_POSTS.slice(themeIdx, themeIdx + 3);
 
   const formatCount = (n) => {
@@ -108,16 +117,21 @@ export default function UserProfile() {
         </div>
 
         {/* Page type & bio */}
-        <p className="text-xs text-gray-400 mb-1">Page · {theme.category}</p>
-        {theme.bio && (
-          <p className="text-sm text-gray-800 mb-3 whitespace-pre-line">{theme.bio}</p>
+        <p className="text-xs text-gray-400 mb-1">Page · {displayCategory}</p>
+        {displayBio && (
+          <p className="text-sm text-gray-800 mb-3 whitespace-pre-line">{displayBio}</p>
         )}
 
         {/* Category badge row */}
         <div className="flex items-center gap-2 mb-4 flex-wrap">
           <span className="flex items-center gap-1 text-xs text-gray-600 bg-gray-100 rounded-full px-2 py-1">
-            🎬 {theme.category}
+            🎬 {displayCategory}
           </span>
+          {displayLocation && (
+            <span className="flex items-center gap-1 text-xs text-gray-600 bg-gray-100 rounded-full px-2 py-1">
+              📍 {displayLocation}
+            </span>
+          )}
           {user.mobileNumber && (
             <span className="flex items-center gap-1 text-xs text-gray-600 bg-gray-100 rounded-full px-2 py-1">
               📱 {user.mobileNumber}
@@ -191,6 +205,14 @@ export default function UserProfile() {
       {/* Details section */}
       <div className="bg-white mt-2 px-4 py-4">
         <h2 className="font-bold text-base text-gray-900 mb-3">Details</h2>
+        {displayLocation && (
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-8 h-8 border border-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
+              <MapPin className="w-4 h-4 text-gray-500" />
+            </div>
+            <span className="text-gray-700 text-sm">{displayLocation}</span>
+          </div>
+        )}
         {birthday && (
           <div className="flex items-center gap-3 mb-3">
             <div className="w-8 h-8 border border-gray-300 rounded-full flex items-center justify-center flex-shrink-0">

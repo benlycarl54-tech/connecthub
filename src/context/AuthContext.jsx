@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState } from "react";
+import { FEED_USERS, getFeedUserById } from "@/data/feedUsers.js";
 
 const FBAuthContext = createContext(null);
 
@@ -68,17 +69,24 @@ export function FBAuthProvider({ children }) {
     }
   };
 
-  const getAllUsers = () => getAccounts();
+  const getAllUsers = () => [...getAccounts(), ...FEED_USERS];
 
-  const getUserById = (id) => getAccounts().find(a => a.id === id) || null;
+  const getUserById = (id) => {
+    if (id && id.startsWith("feed_")) return getFeedUserById(id);
+    return getAccounts().find(a => a.id === id) || null;
+  };
 
   const searchUsers = (query) => {
     if (!query.trim()) return [];
     const q = query.toLowerCase();
-    return getAccounts().filter(a =>
+    const accountMatches = getAccounts().filter(a =>
       `${a.firstName} ${a.lastName}`.toLowerCase().includes(q) ||
       a.emailAddress?.toLowerCase().includes(q)
     );
+    const feedMatches = FEED_USERS.filter(u =>
+      `${u.firstName} ${u.lastName}`.toLowerCase().includes(q)
+    );
+    return [...accountMatches, ...feedMatches];
   };
 
   // Admin: update any user

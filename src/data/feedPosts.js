@@ -1,6 +1,7 @@
 export const FEED_POSTS = [
   {
     id: 1,
+    authorId: "feed_1",
     name: "James Whitfield",
     avatar: "https://media.base44.com/images/public/69d064686cc19a99ff8b2dc7/7794178bb_4a796f6c9319edce10116c468a764a72.jpg",
     time: "2m",
@@ -14,6 +15,7 @@ export const FEED_POSTS = [
   },
   {
     id: 2,
+    authorId: "feed_2",
     name: "Robert Haines",
     avatar: "https://media.base44.com/images/public/69d064686cc19a99ff8b2dc7/201aa1f06_a9625f00edf0644362bb01fe676cadc3.jpg",
     time: "15m",
@@ -27,6 +29,7 @@ export const FEED_POSTS = [
   },
   {
     id: 3,
+    authorId: "feed_3",
     name: "Daniel Crawford",
     avatar: "https://media.base44.com/images/public/69d064686cc19a99ff8b2dc7/967074356_bf10265f363af8acbd14ffd9479d5804.jpg",
     time: "32m",
@@ -40,6 +43,7 @@ export const FEED_POSTS = [
   },
   {
     id: 4,
+    authorId: "feed_4",
     name: "Michael Peters",
     avatar: "https://media.base44.com/images/public/69d064686cc19a99ff8b2dc7/8aabbc3da_f47f9bf0c1d15987f4bc81b9f0b8d04b.jpg",
     time: "1h",
@@ -53,6 +57,7 @@ export const FEED_POSTS = [
   },
   {
     id: 5,
+    authorId: "feed_5",
     name: "Thomas Bradley",
     avatar: "https://media.base44.com/images/public/69d064686cc19a99ff8b2dc7/16fe1d587_d74d3ac322359b6b723fc3e9365bfa97.jpg",
     time: "1h",
@@ -66,6 +71,7 @@ export const FEED_POSTS = [
   },
   {
     id: 6,
+    authorId: "feed_6",
     name: "William Hartmann",
     avatar: "https://media.base44.com/images/public/69d064686cc19a99ff8b2dc7/79e0ba0f9_27345cab0ca59d5bad631e1b38592e5c.jpg",
     time: "2h",
@@ -79,6 +85,7 @@ export const FEED_POSTS = [
   },
   {
     id: 7,
+    authorId: "feed_7",
     name: "Patricia Monroe",
     avatar: "https://media.base44.com/images/public/69d064686cc19a99ff8b2dc7/79630d9e5_19aa7f9a156745f518f32a27306b274b.jpg",
     time: "2h",
@@ -92,6 +99,7 @@ export const FEED_POSTS = [
   },
   {
     id: 8,
+    authorId: "feed_8",
     name: "Sandra Coleman",
     avatar: "https://media.base44.com/images/public/69d064686cc19a99ff8b2dc7/ab332e665_c0eac26f4c761d0318da7d6a06c03c21.jpg",
     time: "3h",
@@ -105,6 +113,7 @@ export const FEED_POSTS = [
   },
   {
     id: 9,
+    authorId: "feed_9",
     name: "Helen Kowalski",
     avatar: "https://media.base44.com/images/public/69d064686cc19a99ff8b2dc7/b1cd7c142_417f5cc6873f0e21437990b4148b4d61.jpg",
     time: "3h",
@@ -118,6 +127,7 @@ export const FEED_POSTS = [
   },
   {
     id: 10,
+    authorId: "feed_10",
     name: "Linda Stephenson",
     avatar: "https://media.base44.com/images/public/69d064686cc19a99ff8b2dc7/ca1e07b51_73559b69b620d54a4498159de7c42056.jpg",
     time: "4h",
@@ -131,6 +141,7 @@ export const FEED_POSTS = [
   },
   {
     id: 11,
+    authorId: "feed_11",
     name: "Barbara Fleming",
     avatar: "https://media.base44.com/images/public/69d064686cc19a99ff8b2dc7/10a5e89e5_9179c0f02208a2806c45d29ef913b2f6.jpg",
     time: "4h",
@@ -144,6 +155,7 @@ export const FEED_POSTS = [
   },
   {
     id: 12,
+    authorId: "feed_12",
     name: "Margaret Olsen",
     avatar: "https://media.base44.com/images/public/69d064686cc19a99ff8b2dc7/37bdd4f15_3e91274dd5559d946ee2d4c8dbb5c723.jpg",
     time: "5h",
@@ -157,6 +169,7 @@ export const FEED_POSTS = [
   },
   {
     id: 13,
+    authorId: "feed_13",
     name: "Gary Thompson",
     avatar: "https://media.base44.com/images/public/69d064686cc19a99ff8b2dc7/5faeed2e0_1acef5c954a71877e186801722ae2075.jpg",
     time: "5h",
@@ -170,6 +183,7 @@ export const FEED_POSTS = [
   },
   {
     id: 14,
+    authorId: "feed_14",
     name: "Donna Richardson",
     avatar: "https://media.base44.com/images/public/69d064686cc19a99ff8b2dc7/e2ce49cab_5f0314745346ce73ce16d35e364aa420.jpg",
     time: "6h",
@@ -183,6 +197,7 @@ export const FEED_POSTS = [
   },
   {
     id: 15,
+    authorId: "feed_15",
     name: "Steven Murphy",
     avatar: "https://media.base44.com/images/public/69d064686cc19a99ff8b2dc7/8f9deb6ef_99fbf454c6b79086e8f2592dc08d1de1.jpg",
     time: "7h",
@@ -196,6 +211,7 @@ export const FEED_POSTS = [
   },
   {
     id: 16,
+    authorId: "feed_16",
     name: "Harold Dixon",
     avatar: "https://media.base44.com/images/public/69d064686cc19a99ff8b2dc7/6110bef39_ed09b61a57339a56e73edb986321527c.jpg",
     time: "8h",
@@ -209,6 +225,7 @@ export const FEED_POSTS = [
   },
   {
     id: 17,
+    authorId: "feed_17",
     name: "Frank Carroll",
     avatar: "https://media.base44.com/images/public/69d064686cc19a99ff8b2dc7/6f5dd9196_42264a3ae8745707d5d3310a30fa95b2.jpg",
     time: "9h",
@@ -222,6 +239,7 @@ export const FEED_POSTS = [
   },
   {
     id: 18,
+    authorId: "feed_18",
     name: "Kevin O'Brien",
     avatar: "https://media.base44.com/images/public/69d064686cc19a99ff8b2dc7/33f3503a9_7e0fd98ce54a822d3223901ce34c33d7.jpg",
     time: "10h",
@@ -235,6 +253,7 @@ export const FEED_POSTS = [
   },
   {
     id: 19,
+    authorId: "feed_19",
     name: "Walter Jenkins",
     avatar: "https://media.base44.com/images/public/69d064686cc19a99ff8b2dc7/ba76420b6_1f2d244f3091600e334dbda63ef4f7d7.jpg",
     time: "11h",
@@ -248,6 +267,7 @@ export const FEED_POSTS = [
   },
   {
     id: 20,
+    authorId: "feed_20",
     name: "Dr. Richard Chen",
     avatar: "https://media.base44.com/images/public/69d064686cc19a99ff8b2dc7/92c932219_6e09b97eaa6efe8817667acae9e5cb2c.jpg",
     time: "Yesterday",
@@ -261,6 +281,7 @@ export const FEED_POSTS = [
   },
   {
     id: 21,
+    authorId: "feed_21",
     name: "Dennis Barker",
     avatar: "https://media.base44.com/images/public/69d064686cc19a99ff8b2dc7/4d8635ac9_6b214f9bc9d34e70a7146fcc59db35c0.jpg",
     time: "Yesterday",
@@ -274,6 +295,7 @@ export const FEED_POSTS = [
   },
   {
     id: 22,
+    authorId: "feed_22",
     name: "Craig Murphy",
     avatar: "https://media.base44.com/images/public/69d064686cc19a99ff8b2dc7/5ac0732d1_b3e03371c8a986df790f5e964e8666d3.jpg",
     time: "Yesterday",
@@ -287,6 +309,7 @@ export const FEED_POSTS = [
   },
   {
     id: 23,
+    authorId: "feed_23",
     name: "Emmanuel Okafor",
     avatar: "https://media.base44.com/images/public/69d064686cc19a99ff8b2dc7/968775abc_358142495f4b527e792ff2aff825b8c6.jpg",
     time: "2 days ago",
@@ -300,6 +323,7 @@ export const FEED_POSTS = [
   },
   {
     id: 24,
+    authorId: "feed_24",
     name: "Hans Mueller",
     avatar: "https://media.base44.com/images/public/69d064686cc19a99ff8b2dc7/8a3aa1213_89912d20de828d559a6cb4beafb6ab0b.jpg",
     time: "2 days ago",
@@ -313,6 +337,7 @@ export const FEED_POSTS = [
   },
   {
     id: 25,
+    authorId: "feed_1",
     name: "James Whitfield",
     avatar: "https://media.base44.com/images/public/69d064686cc19a99ff8b2dc7/7794178bb_4a796f6c9319edce10116c468a764a72.jpg",
     time: "3 days ago",
