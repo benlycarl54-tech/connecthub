@@ -19,12 +19,15 @@ export default function ChatView({ convo, currentUser, onBack, onSend }) {
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Load messages and poll for new ones every 2s (real-time simulation)
+  // Load messages and poll for new ones every 1s for real-time sync
   useEffect(() => {
     if (!convo) return;
-    const load = () => setMessages(getMessages(convo.id));
+    const load = () => {
+      const msgs = getMessages(convo.id);
+      setMessages(msgs);
+    };
     load();
-    const interval = setInterval(load, 2000);
+    const interval = setInterval(load, 1000);
     return () => clearInterval(interval);
   }, [convo?.id]);
 

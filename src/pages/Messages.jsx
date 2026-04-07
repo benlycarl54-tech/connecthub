@@ -21,23 +21,34 @@ export default function Messages() {
   const [showNewChat, setShowNewChat] = useState(false);
   const [search, setSearch] = useState("");
 
-  // Load conversations & poll for updates every 3s, refresh verification status
+  // Load conversations & poll for updates every 1s for real-time sync
   useEffect(() => {
     if (!currentUser) return;
     const load = async () => {
       const convos = getConversations(currentUser.id);
-      // Refresh verification status for each user
+      // Refresh verification status and sync latest message from shared storage
       const updated = await Promise.all(
         convos.map(async (c) => {
           const profiles = await base44.entities.UserProfile.filter({ created_by: c.otherId });
           const isVerified = profiles[0]?.is_verified || false;
-          return { ...c, is_verified: isVerified };
+          
+          // Get latest messages from shared conversation
+          const msgs = JSON.parse(localStorage.getItem(`fb_msgs_${c.id}`) || "[]");
+          const lastMsg = msgs[msgs.length - 1];
+          const lastTime = lastMsg ? lastMsg.time : c.lastTime;
+          
+          return { 
+            ...c, 
+            is_verified: isVerified,
+            lastMsg: lastMsg?.text || c.lastMsg,
+            lastTime: lastTime
+          };
         })
       );
       setConversations(updated);
     };
     load();
-    const interval = setInterval(load, 3000);
+    const interval = setInterval(load, 1000);
     return () => clearInterval(interval);
   }, [currentUser?.id]);
 
