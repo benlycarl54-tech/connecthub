@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useFBAuth } from "@/context/AuthContext";
@@ -6,14 +6,18 @@ import { useFBAuth } from "@/context/AuthContext";
 export default function Landing() {
   const { currentUser } = useFBAuth();
   const navigate = useNavigate();
+  const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    if (currentUser) {
-      navigate("/home");
-    } else {
-      base44.auth.redirectToLogin(window.location.origin + "/home");
-    }
-  }, [currentUser]);
+    base44.auth.isAuthenticated().then((authed) => {
+      if (authed) {
+        navigate("/home");
+      } else {
+        base44.auth.redirectToLogin(window.location.origin + "/home");
+      }
+      setChecked(true);
+    });
+  }, []);
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center">
