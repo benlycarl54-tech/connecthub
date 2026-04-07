@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { ChevronLeft, Send, Phone, Video, Info, Smile, Users, Heart } from "lucide-react";
+import { ChevronLeft, Send, Phone, Video, Info, Smile, Users, Heart, Image as ImageIcon } from "lucide-react";
 import { format, parseISO, isToday, isYesterday } from "date-fns";
 import { base44 } from "@/api/base44Client";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import MediaGallery from "./MediaGallery";
+import MediaUploadBar from "./MediaUploadBar";
 
 const EMOJI_LIST = ["😀","😂","❤️","👍","🔥","😍","🙏","😭","💯","🎉"];
 
@@ -34,6 +36,8 @@ export default function ChatView({ convo, currentUser, onBack, onSend }) {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
+  const [showMediaUpload, setShowMediaUpload] = useState(false);
+  const [showGallery, setShowGallery] = useState(false);
   const [otherUserStats, setOtherUserStats] = useState(null);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
@@ -87,6 +91,40 @@ export default function ChatView({ convo, currentUser, onBack, onSend }) {
   const addEmoji = (emoji) => {
     setText(t => t + emoji);
     inputRef.current?.focus();
+  };
+
+  const sendImageMessage = (imageUrl) => {
+    if (!convo) return;
+    const msg = {
+      id: Date.now(),
+      from: currentUser.id,
+      image_url: imageUrl,
+      text: "[Image]",
+      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      timestamp: new Date().toISOString(),
+    };
+    const updated = [...messages, msg];
+    setMessages(updated);
+    saveMessages(convo.id, updated);
+    onSend(convo, msg);
+    setShowMediaUpload(false);
+  };
+
+  const sendVoiceMessage = (voiceUrl) => {
+    if (!convo) return;
+    const msg = {
+      id: Date.now(),
+      from: currentUser.id,
+      voice_url: voiceUrl,
+      text: "[Voice Message]",
+      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      timestamp: new Date().toISOString(),
+    };
+    const updated = [...messages, msg];
+    setMessages(updated);
+    saveMessages(convo.id, updated);
+    onSend(convo, msg);
+    setShowMediaUpload(false);
   };
 
   // Group consecutive messages by sender
@@ -144,8 +182,15 @@ export default function ChatView({ convo, currentUser, onBack, onSend }) {
           <button className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100">
             <Video className="w-5 h-5 text-[#1877F2]" />
           </button>
+          <button 
+           onClick={() => setShowGallery(true)}
+           className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100"
+           title="View shared media"
+          >
+           <ImageIcon className="w-5 h-5 text-[#1877F2]" />
+          </button>
           <button className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100">
-            <Info className="w-5 h-5 text-[#1877F2]" />
+           <Info className="w-5 h-5 text-[#1877F2]" />
           </button>
         </div>
       </div>
@@ -204,24 +249,38 @@ export default function ChatView({ convo, currentUser, onBack, onSend }) {
                       ) : null}
 
                       <div className={`flex items-end gap-1.5`}>
-                        <div className={`max-w-[72%] px-3.5 py-2 text-sm leading-relaxed
-                          ${isMe
-                            ? "bg-[#1877F2] text-white"
-                            : "bg-gray-100 text-gray-900"
-                          }
-                          ${isMe
-                            ? isFirst && isLast ? "rounded-2xl rounded-br-sm"
-                              : isFirst ? "rounded-2xl rounded-br-sm"
-                              : isLast ? "rounded-2xl rounded-tr-sm rounded-br-sm"
-                              : "rounded-2xl rounded-r-sm"
-                            : isFirst && isLast ? "rounded-2xl rounded-bl-sm"
-                              : isFirst ? "rounded-2xl rounded-bl-sm"
-                              : isLast ? "rounded-2xl rounded-tl-sm rounded-bl-sm"
-                              : "rounded-2xl rounded-l-sm"
-                          }`}
-                        >
-                          <p>{msg.text}</p>
-                        </div>
+                        {msg.image_url ? (
+                          <div className="rounded-2xl overflow-hidden max-w-[72%]">
+                            <img src={msg.image_url} alt="Shared image" className="max-h-64 object-cover" />
+                          </div>
+                        ) : msg.voice_url ? (
+                          <div className={`max-w-[72%] px-3.5 py-2 rounded-2xl ${
+                            isMe ? "bg-[#1877F2]" : "bg-gray-100"
+                          }`}>
+                            <audio controls className="h-8">
+                              <source src={msg.voice_url} />
+                            </audio>
+                          </div>
+                        ) : (
+                          <div className={`max-w-[72%] px-3.5 py-2 text-sm leading-relaxed
+                            ${isMe
+                              ? "bg-[#1877F2] text-white"
+                              : "bg-gray-100 text-gray-900"
+                            }
+                            ${isMe
+                              ? isFirst && isLast ? "rounded-2xl rounded-br-sm"
+                                : isFirst ? "rounded-2xl rounded-br-sm"
+                                : isLast ? "rounded-2xl rounded-tr-sm rounded-br-sm"
+                                : "rounded-2xl rounded-r-sm"
+                              : isFirst && isLast ? "rounded-2xl rounded-bl-sm"
+                                : isFirst ? "rounded-2xl rounded-bl-sm"
+                                : isLast ? "rounded-2xl rounded-tl-sm rounded-bl-sm"
+                                : "rounded-2xl rounded-l-sm"
+                            }`}
+                          >
+                            <p>{msg.text}</p>
+                          </div>
+                        )}
                         {isLast && (
                           <p className={`text-[10px] flex-shrink-0 whitespace-nowrap ${isMe ? "text-gray-400" : "text-gray-400"}`}>
                             {relativeTime}
@@ -249,6 +308,15 @@ export default function ChatView({ convo, currentUser, onBack, onSend }) {
         </div>
       )}
 
+      {/* Media upload bar */}
+      {showMediaUpload && (
+        <MediaUploadBar
+          onImageSend={sendImageMessage}
+          onVoiceSend={sendVoiceMessage}
+          onClose={() => setShowMediaUpload(false)}
+        />
+      )}
+
       {/* Input bar */}
       <div className="flex items-center gap-2 px-3 py-2.5 bg-white border-t border-gray-100">
         <button
@@ -256,6 +324,13 @@ export default function ChatView({ convo, currentUser, onBack, onSend }) {
           className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 flex-shrink-0"
         >
           <Smile className="w-5 h-5 text-[#1877F2]" />
+        </button>
+        <button
+          onClick={() => setShowMediaUpload(s => !s)}
+          className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 flex-shrink-0"
+          title="Upload media"
+        >
+          <ImageIcon className="w-5 h-5 text-[#1877F2]" />
         </button>
         <input
           ref={inputRef}
@@ -274,6 +349,9 @@ export default function ChatView({ convo, currentUser, onBack, onSend }) {
           <Send className="w-4 h-4 text-white" />
         </button>
       </div>
+
+      {/* Gallery modal */}
+      {showGallery && <MediaGallery convoId={convo.id} onClose={() => setShowGallery(false)} />}
     </div>
   );
 }
