@@ -99,16 +99,19 @@ export default function Messages() {
     saveConversations(convo.otherId, updatedRecipient);
   };
 
-  const handleOpenConvo = async (convo) => {
+  const handleOpenConvo = (convo) => {
     // Clear unread when opening
     const updated = conversations.map(c => c.id === convo.id ? { ...c, unread: 0 } : c);
     setConversations(updated);
     saveConversations(currentUser.id, updated);
+    setActiveConvo({ ...convo, unread: 0 });
     
-    // Refresh verification status for the other user
-    const profiles = await base44.entities.UserProfile.filter({ created_by: convo.otherId });
-    const isVerified = profiles[0]?.is_verified || false;
-    setActiveConvo({ ...convo, unread: 0, is_verified: isVerified });
+    // Refresh verification status for the other user (non-blocking)
+    base44.entities.UserProfile.filter({ created_by: convo.otherId }).then(profiles => {
+      if (profiles[0]) {
+        setActiveConvo(prev => ({ ...prev, is_verified: profiles[0].is_verified || false }));
+      }
+    });
   };
 
   if (!currentUser) return null;

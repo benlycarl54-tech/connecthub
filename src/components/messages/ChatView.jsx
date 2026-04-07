@@ -4,6 +4,7 @@ import VerifiedBadge from "@/components/VerifiedBadge";
 
 const EMOJI_LIST = ["😀","😂","❤️","👍","🔥","😍","🙏","😭","💯","🎉"];
 
+// Messages stored by conversation ID (shared between both users)
 function getMessages(convoId) {
   try { return JSON.parse(localStorage.getItem(`fb_msgs_${convoId}`) || "[]"); } catch { return []; }
 }
