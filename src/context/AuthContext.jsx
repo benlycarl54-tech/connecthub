@@ -646,7 +646,6 @@ export function FBAuthProvider({ children }) {
 
   const adminUpdateUser = async (userId, updates) => {
     try {
-      // Map FB-style fields to UserProfile fields
       const profileUpdates = {};
       if (updates.firstName !== undefined) profileUpdates.first_name = updates.firstName;
       if (updates.lastName !== undefined) profileUpdates.last_name = updates.lastName;
@@ -654,6 +653,10 @@ export function FBAuthProvider({ children }) {
       if (updates.mobileNumber !== undefined) profileUpdates.mobile_number = updates.mobileNumber;
       if (updates.profilePicture !== undefined) profileUpdates.profile_picture = updates.profilePicture;
       if (updates.is_verified !== undefined) profileUpdates.is_verified = updates.is_verified;
+      // Update Base44 User role when is_admin changes
+      if (updates.is_admin !== undefined) {
+        await base44.entities.User.update(userId, { role: updates.is_admin ? "admin" : "user" });
+      }
       const profiles = await base44.entities.UserProfile.filter({ created_by: userId });
       if (profiles[0]) {
         await base44.entities.UserProfile.update(profiles[0].id, profileUpdates);

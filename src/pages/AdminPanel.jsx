@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Search, Shield, X, Edit3, Save, Ban, CheckCircle, LogIn, Eye, EyeOff } from "lucide-react";
 import { useFBAuth } from "@/context/AuthContext";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import { base44 } from "@/api/base44Client";
 
 function EditUserModal({ user, onClose, onSave }) {
   const [showPassword, setShowPassword] = useState(false);
@@ -174,7 +175,7 @@ function EditUserModal({ user, onClose, onSave }) {
 
 export default function AdminPanel() {
   const navigate = useNavigate();
-  const { currentUser, getAllUsers, adminUpdateUser, login } = useFBAuth();
+  const { currentUser } = useFBAuth();
   const [search, setSearch] = useState("");
   const [editingUser, setEditingUser] = useState(null);
   const [saved, setSaved] = useState(false);
@@ -188,8 +189,30 @@ export default function AdminPanel() {
 
   const loadUsers = async () => {
     try {
-      const users = await getAllUsers();
-      setAllUsers(users.filter(u => !u.id.startsWith("feed_")));
+      // Load Base44 users + UserProfiles merged
+      const [b44Users, profiles] = await Promise.all([
+        base44.entities.User.list(),
+        base44.entities.UserProfile.list(),
+      ]);
+      const merged = b44Users.map(u => {
+        const profile = profiles.find(p => p.created_by === u.id || p.email_address === u.email);
+        return {
+          id: u.id,
+          firstName: profile?.first_name || u.full_name?.split(" ")[0] || u.email?.split("@")[0] || "",
+          lastName: profile?.last_name || u.full_name?.split(" ").slice(1).join(" ") || "",
+          emailAddress: u.email || profile?.email_address || "",
+          mobileNumber: profile?.mobile_number || "",
+          profilePicture: profile?.profile_picture || null,
+          is_verified: profile?.is_verified || false,
+          is_admin: u.role === "admin",
+          is_banned: false,
+          followers: 0,
+          following: 0,
+          likes: 0,
+          _profileId: profile?.id,
+        };
+      });
+      setAllUsers(merged);
     } catch (error) {
       console.error("Load users error:", error);
     } finally {
@@ -226,28 +249,51 @@ export default function AdminPanel() {
     );
   });
 
-  const handleLoginAs = async (user) => {
-    // Switch to this user's profile locally (admin preview mode)
-    const result = await login(user.emailAddress || user.mobileNumber || user.email_address, "");
-    if (result.success) {
-      navigate("/home");
-    } else {
-      // Directly set user in context as fallback
-      setLoginAsError("Switched to user profile (preview mode)");
-      setTimeout(() => setLoginAsError(""), 2000);
-      navigate("/home");
-    }
+  const handleLoginAs = (user) => {
+    // Switch the local session to view as this user (admin impersonation)
+    const impersonated = {
+      ...user,
+      _impersonating: true,
+    };
+    localStorage.setItem("fbCurrentUser", JSON.stringify(impersonated));
+    navigate("/home");
+    window.location.reload();
   };
 
   const handleSave = async (userId, updates) => {
-    await adminUpdateUser(userId, updates);
-    await loadUsers();
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    try {
+      // Update Base44 User role if is_admin changed
+      if (updates.is_admin !== undefined) {
+        await base44.entities.User.update(userId, { role: updates.is_admin ? "admin" : "user" });
+      }
+      // Update UserProfile fields
+      const profileUpdates = {
+        first_name: updates.firstName,
+        last_name: updates.lastName,
+        email_address: updates.emailAddress,
+        mobile_number: updates.mobileNumber,
+        is_verified: updates.is_verified,
+      };
+      const profiles = await base44.entities.UserProfile.filter({ created_by: userId });
+      if (profiles[0]) {
+        await base44.entities.UserProfile.update(profiles[0].id, profileUpdates);
+      } else {
+        await base44.entities.UserProfile.create({ ...profileUpdates, created_by: userId });
+      }
+      await loadUsers();
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (e) {
+      console.error("Save error:", e);
+    }
   };
 
   const quickToggle = async (user, field) => {
-    await adminUpdateUser(user.id, { [field]: !user[field] });
+    if (field === "is_admin") {
+      await base44.entities.User.update(user.id, { role: !user.is_admin ? "admin" : "user" });
+    } else if (field === "is_verified" && user._profileId) {
+      await base44.entities.UserProfile.update(user._profileId, { is_verified: !user.is_verified });
+    }
     await loadUsers();
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
