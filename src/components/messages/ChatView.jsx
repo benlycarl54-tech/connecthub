@@ -42,10 +42,11 @@ export default function ChatView({ convo, currentUser, onBack, onSend }) {
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Load messages and poll for new ones every 1s for real-time sync
+  // Load messages and poll for new ones every 500ms for real-time bidirectional sync
   useEffect(() => {
     if (!convo) return;
     const load = async () => {
+      // Always fetch latest messages from shared storage
       const msgs = getMessages(convo.id);
       setMessages(msgs);
       
@@ -61,7 +62,8 @@ export default function ChatView({ convo, currentUser, onBack, onSend }) {
       }
     };
     load();
-    const interval = setInterval(load, 1000);
+    // Poll every 500ms for faster message sync between users
+    const interval = setInterval(load, 500);
     return () => clearInterval(interval);
   }, [convo?.id]);
 
