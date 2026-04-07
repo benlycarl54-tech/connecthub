@@ -48,6 +48,21 @@
       "type": "boolean",
       "default": false,
       "description": "Whether user is verified"
+    },
+    "followers": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of followers"
+    },
+    "following": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of accounts following"
+    },
+    "likes": {
+      "type": "number",
+      "default": 0,
+      "description": "Total likes received"
     }
   },
   "required": [

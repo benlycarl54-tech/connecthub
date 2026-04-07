@@ -54,23 +54,26 @@ export function FBAuthProvider({ children }) {
         // Build a merged currentUser object compatible with all existing components
         const merged = {
           id: b44User.id,
-          firstName: profile.first_name || nameParts?.[0] || b44User.email.split("@")[0],
-          lastName: profile.last_name || "",
+          firstName: profile.first_name || b44User.full_name?.split(" ")[0] || b44User.email.split("@")[0],
+          lastName: profile.last_name || b44User.full_name?.split(" ").slice(1).join(" ") || "",
           emailAddress: b44User.email,
           profilePicture: profile.profile_picture || null,
           is_verified: profile.is_verified || false,
           is_admin: b44User.role === "admin",
           is_banned: false,
-          followers: 0,
-          following: 0,
-          likes: 0,
+          followers: profile.followers || 0,
+          following: profile.following || 0,
+          likes: profile.likes || 0,
           ...profile,
-          // Normalize field names
+          // Normalize field names — must come after spread to override
+          id: b44User.id,
           firstName: profile.first_name || b44User.full_name?.split(" ")[0] || b44User.email.split("@")[0],
           lastName: profile.last_name || b44User.full_name?.split(" ").slice(1).join(" ") || "",
-          id: b44User.id,
           emailAddress: b44User.email,
           is_admin: b44User.role === "admin",
+          followers: profile.followers || 0,
+          following: profile.following || 0,
+          likes: profile.likes || 0,
         };
         localStorage.setItem("fbCurrentUser", JSON.stringify(merged));
         setCurrentUser(merged);
@@ -180,6 +183,9 @@ export function FBAuthProvider({ children }) {
       if (updates.lastName !== undefined) profileUpdates.last_name = updates.lastName;
       if (updates.profilePicture !== undefined) profileUpdates.profile_picture = updates.profilePicture;
       if (updates.is_verified !== undefined) profileUpdates.is_verified = updates.is_verified;
+      if (updates.followers !== undefined) profileUpdates.followers = updates.followers;
+      if (updates.following !== undefined) profileUpdates.following = updates.following;
+      if (updates.likes !== undefined) profileUpdates.likes = updates.likes;
       // Find and update the UserProfile
       const profiles = await base44.entities.UserProfile.filter({ email_address: currentUser.emailAddress });
       if (profiles[0]) {

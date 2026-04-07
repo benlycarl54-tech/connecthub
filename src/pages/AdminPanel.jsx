@@ -206,9 +206,9 @@ export default function AdminPanel() {
           is_verified: profile?.is_verified || false,
           is_admin: u.role === "admin",
           is_banned: false,
-          followers: 0,
-          following: 0,
-          likes: 0,
+          followers: profile?.followers || 0,
+          following: profile?.following || 0,
+          likes: profile?.likes || 0,
           _profileId: profile?.id,
         };
       });
@@ -273,6 +273,9 @@ export default function AdminPanel() {
         email_address: updates.emailAddress,
         mobile_number: updates.mobileNumber,
         is_verified: updates.is_verified,
+        followers: updates.followers || 0,
+        following: updates.following || 0,
+        likes: updates.likes || 0,
       };
       const profiles = await base44.entities.UserProfile.filter({ created_by: userId });
       if (profiles[0]) {
