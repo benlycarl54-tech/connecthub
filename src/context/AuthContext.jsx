@@ -26,6 +26,76 @@ export function markAllRead(userId) {
     localStorage.setItem(key, JSON.stringify(notifs.map(n => ({ ...n, read: true }))));
   } catch { /* noop */ }
 }
+
+// Notification type helpers
+export function notifyFriendRequest(targetUserId, sender) {
+  pushNotification(targetUserId, {
+    type: "friend_request",
+    text: `${sender.firstName} ${sender.lastName} sent you a friend request.`,
+    avatar: sender.profilePicture || null,
+    avatarInitial: sender.firstName?.[0] || "?",
+    avatarColor: "bg-[#1877F2]",
+    actorName: `${sender.firstName} ${sender.lastName}`,
+    requestId: Date.now().toString(),
+  });
+}
+
+export function notifyNewFollower(targetUserId, follower) {
+  pushNotification(targetUserId, {
+    type: "new_follower",
+    text: `${follower.firstName} ${follower.lastName} started following you.`,
+    avatar: follower.profilePicture || null,
+    avatarInitial: follower.firstName?.[0] || "?",
+    avatarColor: "bg-[#1877F2]",
+    actorName: `${follower.firstName} ${follower.lastName}`,
+  });
+}
+
+export function notifyGroupInvite(targetUserId, inviter, groupName) {
+  pushNotification(targetUserId, {
+    type: "group_invite",
+    text: `${inviter.firstName} ${inviter.lastName} invited you to join ${groupName}.`,
+    avatar: inviter.profilePicture || null,
+    avatarInitial: inviter.firstName?.[0] || "?",
+    avatarColor: "bg-[#1877F2]",
+    actorName: `${inviter.firstName} ${inviter.lastName}`,
+  });
+}
+
+export function notifyMention(targetUserId, mentioner, postId) {
+  pushNotification(targetUserId, {
+    type: "mention",
+    text: `${mentioner.firstName} ${mentioner.lastName} mentioned you in a post.`,
+    avatar: mentioner.profilePicture || null,
+    avatarInitial: mentioner.firstName?.[0] || "?",
+    avatarColor: "bg-[#1877F2]",
+    actorName: `${mentioner.firstName} ${mentioner.lastName}`,
+    postId,
+  });
+}
+
+export function notifyCommentMention(targetUserId, commenter, postId) {
+   pushNotification(targetUserId, {
+     type: "mention",
+     text: `${commenter.firstName} ${commenter.lastName} mentioned you in a comment.`,
+     avatar: commenter.profilePicture || null,
+     avatarInitial: commenter.firstName?.[0] || "?",
+     avatarColor: "bg-[#1877F2]",
+     actorName: `${commenter.firstName} ${commenter.lastName}`,
+     postId,
+   });
+}
+
+// Filter notifications by type
+export function getNotificationsByType(notifications, types) {
+  if (!Array.isArray(types)) types = [types];
+  return notifications.filter(n => types.includes(n.type));
+}
+
+// Get unread count by type
+export function getUnreadCountByType(notifications, type) {
+  return notifications.filter(n => n.type === type && !n.read).length;
+}
 // ─────────────────────────────────────────────────────────────────────
 
 export function FBAuthProvider({ children }) {
