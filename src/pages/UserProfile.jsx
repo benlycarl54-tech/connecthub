@@ -40,11 +40,14 @@ export default function UserProfile() {
     async function load() {
       const u = await getUserById(userId);
       if (u) {
+        // Ensure stats are numbers from database
+        const ensureNum = (val) => typeof val === 'number' ? val : (parseInt(val) || 0);
         setUser({
           ...u,
-          followers: typeof u.followers === 'number' ? u.followers : 0,
-          following: typeof u.following === 'number' ? u.following : 0,
-          likes: typeof u.likes === 'number' ? u.likes : 0,
+          followers: ensureNum(u.followers),
+          following: ensureNum(u.following),
+          likes: ensureNum(u.likes),
+          is_verified: u.is_verified || false,
         });
       }
       if (u && currentUser && u.id !== currentUser.id) {
