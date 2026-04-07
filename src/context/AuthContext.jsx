@@ -201,7 +201,7 @@ export function FBAuthProvider({ children }) {
   };
 
   // Follow / unfollow a user and push a notification to them
-  const followUser = (targetUserId) => {
+  const followUser = async (targetUserId) => {
     if (!currentUser) return;
     const followKey = `fb_following_${currentUser.id}`;
     const following = JSON.parse(localStorage.getItem(followKey) || "[]");
@@ -212,28 +212,24 @@ export function FBAuthProvider({ children }) {
       const updated = following.filter(id => id !== targetUserId);
       localStorage.setItem(followKey, JSON.stringify(updated));
       updateCurrentUser({ following: Math.max(0, (currentUser.following || 0) - 1) });
-      // Decrement target's followers
-      const accounts = getAccounts();
-      const tIdx = accounts.findIndex(a => a.id === targetUserId);
-      if (tIdx !== -1) {
-        accounts[tIdx] = { ...accounts[tIdx], followers: Math.max(0, (accounts[tIdx].followers || 0) - 1) };
-        saveAccounts(accounts);
+      // Decrement target's followers in DB
+      const targetProfiles = await base44.entities.UserProfile.filter({ created_by: targetUserId });
+      if (targetProfiles[0]) {
+        await base44.entities.UserProfile.update(targetProfiles[0].id, {
+          followers: Math.max(0, (targetProfiles[0].followers || 0) - 1),
+        });
       }
     } else {
       // Follow
       following.push(targetUserId);
       localStorage.setItem(followKey, JSON.stringify(following));
       updateCurrentUser({ following: (currentUser.following || 0) + 1 });
-      // Increment target followers
-      const accounts = getAccounts();
-      const tIdx = accounts.findIndex(a => a.id === targetUserId);
-      if (tIdx !== -1) {
-        accounts[tIdx] = { ...accounts[tIdx], followers: (accounts[tIdx].followers || 0) + 1 };
-        saveAccounts(accounts);
-        if (currentUser.id === targetUserId) {
-          localStorage.setItem("fbCurrentUser", JSON.stringify(accounts[tIdx]));
-          setCurrentUser(accounts[tIdx]);
-        }
+      // Increment target's followers in DB
+      const targetProfiles = await base44.entities.UserProfile.filter({ created_by: targetUserId });
+      if (targetProfiles[0]) {
+        await base44.entities.UserProfile.update(targetProfiles[0].id, {
+          followers: (targetProfiles[0].followers || 0) + 1,
+        });
       }
       // Push notification to target
       pushNotification(targetUserId, {
