@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ChevronLeft, Search, MoreHorizontal, Camera, Pencil, Plus, ChevronDown, X, LogOut, Shield, Check, AtSign, Share2, BarChart2 } from "lucide-react";
 import CreatePost from "./CreatePost";
 import { useFBAuth } from "@/context/AuthContext";
+import { base44 } from "@/api/base44Client";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useRegister } from "@/context/RegisterContext";
 import { format } from "date-fns";
@@ -11,10 +12,33 @@ import PostCard from "@/components/post/PostCard";
 import GalleryTab from "@/components/gallery/GalleryTab";
 import ProModeModal from "@/components/profile/ProModeModal";
 
-function getUserPosts(userId) {
+async function getUserPosts(userId) {
   try {
-    const all = JSON.parse(localStorage.getItem("fb_user_posts") || "[]");
-    return all.filter(p => p.authorId === userId);
+    // Load from database first (persistent)
+    const dbPosts = await base44.entities.Post.filter({ author_id: userId });
+    const normalized = dbPosts.map(p => ({
+      id: p.id,
+      authorId: p.author_id,
+      name: p.author_name,
+      avatar: p.author_avatar || null,
+      time: "Just now",
+      privacy: "🌐",
+      content: p.content,
+      image: p.image_url || null,
+      images: p.image_url ? [p.image_url] : [],
+      likes: p.likes_count || 0,
+      comments: p.comments_count || 0,
+      shares: p.shares_count || 0,
+      reactions: "",
+      verified: false,
+    }));
+    
+    // Also get from localStorage for legacy compatibility
+    const local = JSON.parse(localStorage.getItem("fb_user_posts") || "[]").filter(p => p.authorId === userId);
+    
+    // Merge and deduplicate
+    const seen = new Set(normalized.map(p => p.id));
+    return [...normalized, ...local.filter(p => !seen.has(p.id))];
   } catch { return []; }
 }
 
@@ -50,10 +74,10 @@ export default function Profile() {
   const birthday = user.birthday ? new Date(user.birthday) : null;
   const joinedYear = user.created_date ? new Date(user.created_date).getFullYear() : new Date().getFullYear();
 
-  // Load user's own posts from localStorage every time postRefresh changes
+  // Load user's own posts from database/localStorage every time postRefresh changes
   useEffect(() => {
     if (currentUser?.id) {
-      setMyPosts(getUserPosts(currentUser.id));
+      getUserPosts(currentUser.id).then(posts => setMyPosts(posts));
     }
   }, [currentUser?.id, postRefresh]);
 

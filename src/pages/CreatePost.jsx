@@ -37,30 +37,45 @@ export default function CreatePost({ onClose, onPost }) {
       const res = await base44.integrations.Core.UploadFile({ file });
       imageUrls.push(res.file_url);
     }
-    const newPost = {
-      id: Date.now(),
-      authorId: currentUser?.id || "me",
-      name: fullName,
-      avatar: avatar || null,
-      time: "Just now",
-      privacy: "🌐",
-      content: content.trim(),
-      image: imageUrls[0] || null,
-      images: imageUrls,
-      likes: 0,
-      comments: 0,
-      shares: 0,
-      reactions: "",
-      verified: currentUser?.is_verified || false,
-    };
-    setUploading(false);
+    
     try {
+      // Save post to database (persistent)
+      const dbPost = await base44.entities.Post.create({
+        author_id: currentUser?.id || "me",
+        author_name: fullName,
+        author_avatar: avatar || null,
+        content: content.trim(),
+        image_url: imageUrls[0] || null,
+      });
+      
+      // Also save to localStorage for legacy compatibility
+      const newPost = {
+        id: dbPost.id || Date.now(),
+        authorId: currentUser?.id || "me",
+        name: fullName,
+        avatar: avatar || null,
+        time: "Just now",
+        privacy: "🌐",
+        content: content.trim(),
+        image: imageUrls[0] || null,
+        images: imageUrls,
+        likes: 0,
+        comments: 0,
+        shares: 0,
+        reactions: "",
+        verified: currentUser?.is_verified || false,
+      };
       const stored = JSON.parse(localStorage.getItem("fb_user_posts") || "[]");
       stored.unshift(newPost);
       localStorage.setItem("fb_user_posts", JSON.stringify(stored.slice(0, 200)));
-    } catch {}
-    if (onPost) onPost(newPost);
-    if (onClose) onClose();
+      
+      if (onPost) onPost(newPost);
+    } catch (err) {
+      console.error("Post creation error:", err);
+    } finally {
+      setUploading(false);
+      if (onClose) onClose();
+    }
   };
 
   return (
