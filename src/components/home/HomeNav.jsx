@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Home, Users, MonitorPlay, Bell, Menu } from "lucide-react";
+import { Home, Users, MonitorPlay, Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useFBAuth } from "@/context/AuthContext";
+import NotificationBell from "./NotificationBell";
 
 export default function HomeNav({ active, setActive }) {
   const navigate = useNavigate();
@@ -16,7 +17,6 @@ export default function HomeNav({ active, setActive }) {
     { icon: Home, label: "Home", path: "/home" },
     { icon: Users, label: "Friends", path: "/friends", badge: friendRequestCount },
     { icon: MonitorPlay, label: "Watch", path: "/videos" },
-    { icon: Bell, label: "Notifications", path: "/notifications" },
     { icon: Menu, label: "Menu", path: null },
   ];
 
@@ -43,6 +43,9 @@ export default function HomeNav({ active, setActive }) {
           )}
         </button>
       ))}
+
+      {/* Real-time notification bell with dropdown */}
+      <NotificationBell active={active} />
     </div>
   );
 }
