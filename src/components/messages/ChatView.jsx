@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { ChevronLeft, Send, Phone, Video, Info, Smile } from "lucide-react";
+import { ChevronLeft, Send, Phone, Video, Info, Smile, Users, Heart } from "lucide-react";
 import { format, parseISO, isToday, isYesterday } from "date-fns";
+import { base44 } from "@/api/base44Client";
 import VerifiedBadge from "@/components/VerifiedBadge";
 
 const EMOJI_LIST = ["😀","😂","❤️","👍","🔥","😍","🙏","😭","💯","🎉"];
@@ -33,15 +34,27 @@ export default function ChatView({ convo, currentUser, onBack, onSend }) {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
+  const [otherUserStats, setOtherUserStats] = useState(null);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
   // Load messages and poll for new ones every 1s for real-time sync
   useEffect(() => {
     if (!convo) return;
-    const load = () => {
+    const load = async () => {
       const msgs = getMessages(convo.id);
       setMessages(msgs);
+      
+      // Load other user's stats
+      const profiles = await base44.entities.UserProfile.filter({ created_by: convo.otherId });
+      if (profiles[0]) {
+        setOtherUserStats({
+          followers: profiles[0].followers || 0,
+          following: profiles[0].following || 0,
+          likes: profiles[0].likes || 0,
+          is_verified: profiles[0].is_verified || false,
+        });
+      }
     };
     load();
     const interval = setInterval(load, 1000);
@@ -59,9 +72,11 @@ export default function ChatView({ convo, currentUser, onBack, onSend }) {
       from: currentUser.id,
       text: text.trim(),
       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      timestamp: new Date().toISOString(),
     };
     const updated = [...messages, msg];
     setMessages(updated);
+    // Store in shared conversation space
     saveMessages(convo.id, updated);
     onSend(convo, msg);
     setText("");
@@ -108,9 +123,19 @@ export default function ChatView({ convo, currentUser, onBack, onSend }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1">
             <p className="font-semibold text-gray-900 text-sm truncate">{convo.otherName}</p>
-            {convo.is_verified && <VerifiedBadge size={14} />}
+            {otherUserStats?.is_verified && <VerifiedBadge size={14} />}
           </div>
-          <p className="text-xs text-green-500 font-medium">Active now</p>
+          {otherUserStats && (
+            <div className="flex items-center gap-2 text-[10px] text-gray-500 mt-0.5">
+              <span className="flex items-center gap-0.5">
+                <Users className="w-3 h-3" />{otherUserStats.followers}
+              </span>
+              <span>•</span>
+              <span className="flex items-center gap-0.5">
+                <Heart className="w-3 h-3" />{otherUserStats.likes}
+              </span>
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-1">
           <button className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100">

@@ -389,43 +389,44 @@ export function FBAuthProvider({ children }) {
   };
 
   // ── Marketplace Management ──────────────────────────────────────────────
-  const getMarketplaceListings = () => {
-    try { return JSON.parse(localStorage.getItem("fb_marketplace") || "[]"); } catch { return []; }
-  };
-
-  const saveMarketplaceListings = (listings) => {
-    localStorage.setItem("fb_marketplace", JSON.stringify(listings));
-  };
-
-  const createMarketplaceListing = (listingData) => {
-    if (!currentUser) return null;
-    const listings = getMarketplaceListings();
-    const id = Date.now().toString();
-    const newListing = {
-      id,
-      ...listingData,
-      created_at: new Date().toISOString(),
-      status: "Available",
-    };
-    listings.push(newListing);
-    saveMarketplaceListings(listings);
-    return newListing;
-  };
-
-  const getMarketplaceListingById = (listingId) => {
-    const listings = getMarketplaceListings();
-    return listings.find(l => l.id === listingId) || null;
-  };
-
-  const updateMarketplaceListing = (listingId, updates) => {
-    const listings = getMarketplaceListings();
-    const idx = listings.findIndex(l => l.id === listingId);
-    if (idx !== -1) {
-      listings[idx] = { ...listings[idx], ...updates };
-      saveMarketplaceListings(listings);
-      return listings[idx];
+  const getMarketplaceListings = async () => {
+    try {
+      return await base44.entities.Marketplace.list();
+    } catch {
+      return [];
     }
-    return null;
+  };
+
+  const createMarketplaceListing = async (listingData) => {
+    if (!currentUser) return null;
+    try {
+      return await base44.entities.Marketplace.create({
+        ...listingData,
+        seller_id: currentUser.id,
+      });
+    } catch (error) {
+      console.error("Create marketplace listing error:", error);
+      return null;
+    }
+  };
+
+  const getMarketplaceListingById = async (listingId) => {
+    try {
+      const listings = await base44.entities.Marketplace.filter({ id: listingId });
+      return listings[0] || null;
+    } catch {
+      return null;
+    }
+  };
+
+  const updateMarketplaceListing = async (listingId, updates) => {
+    try {
+      await base44.entities.Marketplace.update(listingId, updates);
+      return await getMarketplaceListingById(listingId);
+    } catch (error) {
+      console.error("Update marketplace listing error:", error);
+      return null;
+    }
   };
 
   const createDirectMessage = (senderId, recipientId) => {
@@ -440,6 +441,38 @@ export function FBAuthProvider({ children }) {
     };
     localStorage.setItem(conversationKey, JSON.stringify(conversation));
     return conversation;
+  };
+
+  const createPost = async (postData) => {
+    if (!currentUser) return null;
+    try {
+      return await base44.entities.Post.create({
+        author_id: currentUser.id,
+        author_name: `${currentUser.firstName} ${currentUser.lastName}`,
+        author_avatar: currentUser.profilePicture || null,
+        content: postData.content || "",
+        image_url: postData.image_url || null,
+      });
+    } catch (error) {
+      console.error("Create post error:", error);
+      return null;
+    }
+  };
+
+  const getAllPosts = async () => {
+    try {
+      return await base44.entities.Post.list();
+    } catch {
+      return [];
+    }
+  };
+
+  const getUserPosts = async (userId) => {
+    try {
+      return await base44.entities.Post.filter({ author_id: userId });
+    } catch {
+      return [];
+    }
   };
   // ─────────────────────────────────────────────────────────────────────
 
@@ -698,6 +731,7 @@ export function FBAuthProvider({ children }) {
       addGroupMember, removeGroupMember, postToGroup, getGroupPosts,
       createMarketplaceListing, getMarketplaceListings, getMarketplaceListingById,
       updateMarketplaceListing, createDirectMessage,
+      createPost, getAllPosts, getUserPosts,
     }}>
       {children}
     </FBAuthContext.Provider>

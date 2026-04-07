@@ -2,6 +2,10 @@
   "name": "Post",
   "type": "object",
   "properties": {
+    "author_id": {
+      "type": "string",
+      "description": "ID of the post author (Base44 user)"
+    },
     "author_name": {
       "type": "string",
       "description": "Name of the post author"
@@ -20,22 +24,22 @@
     },
     "likes_count": {
       "type": "number",
-      "default": 0
+      "default": 0,
+      "description": "Number of likes"
     },
     "comments_count": {
       "type": "number",
-      "default": 0
+      "default": 0,
+      "description": "Number of comments"
     },
     "shares_count": {
       "type": "number",
-      "default": 0
-    },
-    "time_ago": {
-      "type": "string",
-      "description": "Display time like '2h' or '1d'"
+      "default": 0,
+      "description": "Number of shares"
     }
   },
   "required": [
+    "author_id",
     "author_name",
     "content"
   ]

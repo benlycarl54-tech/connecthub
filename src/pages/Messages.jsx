@@ -80,16 +80,17 @@ export default function Messages() {
     setShowNewChat(false);
   };
 
-  const handleSend = (convo, msg) => {
+  const handleSend = async (convo, msg) => {
     const now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    // Update sender's list
+    
+    // Update sender's conversation list
     const updatedConvos = conversations.map(c =>
       c.id === convo.id ? { ...c, lastMsg: msg.text, lastTime: now, unread: 0 } : c
     );
     setConversations(updatedConvos);
     saveConversations(currentUser.id, updatedConvos);
 
-    // Sync to recipient's list
+    // Sync to recipient's conversation list
     const recipientConvos = getConversations(convo.otherId);
     const existingRecipient = recipientConvos.find(c => c.id === convo.id);
     const recipientEntry = existingRecipient
