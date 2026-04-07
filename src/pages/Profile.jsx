@@ -96,7 +96,7 @@ export default function Profile() {
       }
     };
     refreshStats();
-    const interval = setInterval(refreshStats, 2000);
+    const interval = setInterval(refreshStats, 5000);
     return () => clearInterval(interval);
   }, [currentUser?.id, getUserById]);
 

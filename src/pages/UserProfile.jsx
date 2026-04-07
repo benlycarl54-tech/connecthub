@@ -57,8 +57,8 @@ export default function UserProfile() {
     }
     load();
 
-    // Refresh profile every 2 seconds to show live stat updates
-    const interval = setInterval(load, 2000);
+    // Refresh profile every 5 seconds to show live stat updates
+    const interval = setInterval(load, 5000);
     return () => clearInterval(interval);
   }, [userId, currentUser, getUserById, isFriend, hasPendingRequest]);
 

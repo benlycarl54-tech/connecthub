@@ -62,8 +62,8 @@ export default function ChatView({ convo, currentUser, onBack, onSend }) {
       }
     };
     load();
-    // Poll every 500ms for faster message sync between users
-    const interval = setInterval(load, 500);
+    // Poll every 3 seconds for message sync (reduces rate limit issues)
+    const interval = setInterval(load, 3000);
     return () => clearInterval(interval);
   }, [convo?.id]);
 
