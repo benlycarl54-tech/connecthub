@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Search, X, UserPlus, Check } from "lucide-react";
 import { useFBAuth } from "@/context/AuthContext";
@@ -8,9 +8,17 @@ export default function SearchPage() {
   const navigate = useNavigate();
   const { searchUsers, currentUser, followUser, isFollowing } = useFBAuth();
   const [query, setQuery] = useState("");
+  const [results, setResults] = useState([]);
   const [followedIds, setFollowedIds] = useState({});
 
-  const results = query.trim() ? searchUsers(query) : [];
+  useEffect(() => {
+    if (!query.trim()) { setResults([]); return; }
+    const timer = setTimeout(async () => {
+      const found = await searchUsers(query);
+      setResults(found || []);
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [query]);
 
   const handleFollow = (e, user) => {
     e.stopPropagation();

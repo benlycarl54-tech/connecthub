@@ -9,13 +9,22 @@ export default function GlobalSearchBar() {
   const { searchUsers, currentUser, followUser, isFollowing } = useFBAuth();
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
+  const [results, setResults] = useState([]);
   const [followedIds, setFollowedIds] = useState({});
   const containerRef = useRef(null);
   const inputRef = useRef(null);
 
-  const results = query.trim().length >= 1 ? searchUsers(query) : [];
-
   const showDropdown = focused && query.trim().length >= 1;
+
+  // Async search with debounce
+  useEffect(() => {
+    if (!query.trim()) { setResults([]); return; }
+    const timer = setTimeout(async () => {
+      const found = await searchUsers(query);
+      setResults(found || []);
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [query]);
 
   // Close on outside click
   useEffect(() => {
