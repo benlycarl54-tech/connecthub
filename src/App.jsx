@@ -19,7 +19,7 @@ import VideosPage from './pages/VideosPage';
 import CreateStory from './pages/CreateStory';
 import StoryViewer from './pages/StoryViewer';
 
-import Landing from './pages/Landing';
+import Landing from './pages/Landing.jsx';
 import Join from './pages/Join';
 import NameStep from './pages/register/NameStep';
 import BirthdayStep from './pages/register/BirthdayStep';

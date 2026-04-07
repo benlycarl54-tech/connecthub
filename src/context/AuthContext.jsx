@@ -33,27 +33,96 @@ export function FBAuthProvider({ children }) {
     try { return JSON.parse(localStorage.getItem("fbCurrentUser") || "null"); } catch { return null; }
   });
 
+  // Sync with Base44 auth on mount — find/create UserProfile record for this Base44 user
+  useEffect(() => {
+    (async () => {
+      try {
+        const b44User = await base44.auth.me();
+        if (!b44User) return;
+        // Try to find existing UserProfile linked to this Base44 user
+        let profiles = await base44.entities.UserProfile.filter({ email_address: b44User.email });
+        let profile = profiles[0];
+        if (!profile) {
+          // Auto-create a UserProfile for this Base44 user on first login
+          const nameParts = (b44User.full_name || "").split(" ");
+          profile = await base44.entities.UserProfile.create({
+            first_name: nameParts[0] || b44User.email.split("@")[0],
+            last_name: nameParts.slice(1).join(" ") || "",
+            email_address: b44User.email,
+          });
+        }
+        // Build a merged currentUser object compatible with all existing components
+        const merged = {
+          id: b44User.id,
+          firstName: profile.first_name || nameParts?.[0] || b44User.email.split("@")[0],
+          lastName: profile.last_name || "",
+          emailAddress: b44User.email,
+          profilePicture: profile.profile_picture || null,
+          is_verified: profile.is_verified || false,
+          is_admin: b44User.role === "admin",
+          is_banned: false,
+          followers: 0,
+          following: 0,
+          likes: 0,
+          ...profile,
+          // Normalize field names
+          firstName: profile.first_name || b44User.full_name?.split(" ")[0] || b44User.email.split("@")[0],
+          lastName: profile.last_name || b44User.full_name?.split(" ").slice(1).join(" ") || "",
+          id: b44User.id,
+          emailAddress: b44User.email,
+          is_admin: b44User.role === "admin",
+        };
+        localStorage.setItem("fbCurrentUser", JSON.stringify(merged));
+        setCurrentUser(merged);
+      } catch (e) {
+        // Not authenticated — clear stale data
+        localStorage.removeItem("fbCurrentUser");
+        setCurrentUser(null);
+      }
+    })();
+  }, []);
+
   const register = async (profileData) => {
+    // With Base44 auth, registration is handled by the platform.
+    // This just creates/updates the UserProfile record.
     try {
-      const baseUsername = `${(profileData.firstName || "").toLowerCase()}${(profileData.lastName || "").toLowerCase()}`.replace(/\s+/g, "");
-      const allUsers = await base44.entities.User.list();
-      const suffix = Date.now().toString().slice(-4);
-      const autoUsername = profileData.username || (baseUsername ? `${baseUsername}${suffix}` : `user${suffix}`);
-      
-      const newUser = await base44.entities.User.create({
-        ...profileData,
-        username: autoUsername,
-        followers: 0,
-        following: 0,
-        likes: 0,
-        is_verified: false,
-        is_admin: allUsers.length === 0, // First user becomes admin
+      const b44User = await base44.auth.me();
+      const existing = b44User ? await base44.entities.UserProfile.filter({ email_address: b44User.email }) : [];
+      let profile;
+      if (existing[0]) {
+        profile = await base44.entities.UserProfile.update(existing[0].id, {
+          first_name: profileData.firstName || existing[0].first_name,
+          last_name: profileData.lastName || existing[0].last_name,
+          profile_picture: profileData.profilePicture || existing[0].profile_picture,
+          mobile_number: profileData.mobileNumber || existing[0].mobile_number,
+          birthday: profileData.birthday || existing[0].birthday,
+          gender: profileData.gender || existing[0].gender,
+        });
+      } else {
+        profile = await base44.entities.UserProfile.create({
+          first_name: profileData.firstName || "",
+          last_name: profileData.lastName || "",
+          email_address: b44User?.email || profileData.emailAddress || "",
+          profile_picture: profileData.profilePicture || null,
+          mobile_number: profileData.mobileNumber || "",
+          birthday: profileData.birthday || "",
+          gender: profileData.gender || "",
+        });
+      }
+      const merged = {
+        ...profile,
+        id: b44User?.id || profile.id,
+        firstName: profile.first_name || "",
+        lastName: profile.last_name || "",
+        emailAddress: profile.email_address || "",
+        profilePicture: profile.profile_picture || null,
+        is_verified: profile.is_verified || false,
+        is_admin: b44User?.role === "admin",
         is_banned: false,
-      });
-      
-      localStorage.setItem("fbCurrentUser", JSON.stringify(newUser));
-      setCurrentUser(newUser);
-      return newUser;
+      };
+      localStorage.setItem("fbCurrentUser", JSON.stringify(merged));
+      setCurrentUser(merged);
+      return merged;
     } catch (error) {
       console.error("Registration error:", error);
       throw error;
@@ -61,26 +130,34 @@ export function FBAuthProvider({ children }) {
   };
 
   const login = async (identifier, password) => {
+    // Legacy login kept for AdminPanel "login as user" compatibility
     try {
-      const users = await base44.entities.User.filter({});
-      const user = users.find(u =>
-        (u.emailAddress === identifier || u.mobileNumber === identifier)
-      );
-      
+      const users = await base44.entities.UserProfile.filter({ email_address: identifier });
+      const user = users[0];
       if (!user) {
-        return { success: false, error: "No account found with this email or mobile number. Please create an account." };
+        return { success: false, error: "No account found with this email or mobile number." };
       }
-      
-      if (user.password !== password) {
-        return { success: false, error: "Incorrect password. Please try again." };
-      }
-      
-      if (user.is_banned) {
-        return { success: false, error: "This account has been suspended. Please contact support." };
-      }
-      
-      localStorage.setItem("fbCurrentUser", JSON.stringify(user));
-      setCurrentUser(user);
+      // Build merged user object
+      const merged = {
+        id: user.created_by || user.id,
+        firstName: user.first_name || "",
+        lastName: user.last_name || "",
+        emailAddress: user.email_address,
+        mobileNumber: user.mobile_number || "",
+        profilePicture: user.profile_picture || null,
+        is_verified: user.is_verified || false,
+        is_admin: false,
+        is_banned: false,
+        followers: 0,
+        following: 0,
+        likes: 0,
+        ...user,
+        firstName: user.first_name || "",
+        lastName: user.last_name || "",
+        emailAddress: user.email_address,
+      };
+      localStorage.setItem("fbCurrentUser", JSON.stringify(merged));
+      setCurrentUser(merged);
       return { success: true };
     } catch (error) {
       console.error("Login error:", error);
@@ -91,14 +168,26 @@ export function FBAuthProvider({ children }) {
   const logout = () => {
     localStorage.removeItem("fbCurrentUser");
     setCurrentUser(null);
+    base44.auth.logout(window.location.origin + "/");
   };
 
   const updateCurrentUser = async (updates) => {
     try {
       if (!currentUser?.id) return;
-      const updated = await base44.entities.User.update(currentUser.id, updates);
-      localStorage.setItem("fbCurrentUser", JSON.stringify(updated));
-      setCurrentUser(updated);
+      // Map FB-style fields to UserProfile fields
+      const profileUpdates = {};
+      if (updates.firstName !== undefined) profileUpdates.first_name = updates.firstName;
+      if (updates.lastName !== undefined) profileUpdates.last_name = updates.lastName;
+      if (updates.profilePicture !== undefined) profileUpdates.profile_picture = updates.profilePicture;
+      if (updates.is_verified !== undefined) profileUpdates.is_verified = updates.is_verified;
+      // Find and update the UserProfile
+      const profiles = await base44.entities.UserProfile.filter({ email_address: currentUser.emailAddress });
+      if (profiles[0]) {
+        await base44.entities.UserProfile.update(profiles[0].id, profileUpdates);
+      }
+      const merged = { ...currentUser, ...updates };
+      localStorage.setItem("fbCurrentUser", JSON.stringify(merged));
+      setCurrentUser(merged);
     } catch (error) {
       console.error("Update user error:", error);
     }
@@ -215,7 +304,7 @@ export function FBAuthProvider({ children }) {
     ]);
     const allFriendships = [...f1, ...f2];
     const friendIds = allFriendships.map(f => f.user1_id === currentUser.id ? f.user2_id : f.user1_id);
-    const users = await Promise.all(friendIds.map(id => base44.entities.User.get(id).catch(() => null)));
+    const users = await Promise.all(friendIds.map(id => getUserById(id)));
     return users.filter(Boolean);
   };
 
@@ -240,8 +329,24 @@ export function FBAuthProvider({ children }) {
 
   const getAllUsers = async () => {
     try {
-      const users = await base44.entities.User.list();
-      return [...users, ...FEED_USERS];
+      const profiles = await base44.entities.UserProfile.list();
+      // Normalize to FB-style user objects
+      const normalized = profiles.map(p => ({
+        ...p,
+        id: p.created_by || p.id,
+        firstName: p.first_name || "",
+        lastName: p.last_name || "",
+        emailAddress: p.email_address || "",
+        mobileNumber: p.mobile_number || "",
+        profilePicture: p.profile_picture || null,
+        is_verified: p.is_verified || false,
+        is_admin: false,
+        is_banned: false,
+        followers: 0,
+        following: 0,
+        likes: 0,
+      }));
+      return [...normalized, ...FEED_USERS];
     } catch (error) {
       console.error("Get all users error:", error);
       return FEED_USERS;
@@ -251,7 +356,22 @@ export function FBAuthProvider({ children }) {
   const getUserById = async (id) => {
     try {
       if (id && id.startsWith("feed_")) return getFeedUserById(id);
-      return await base44.entities.User.get(id);
+      const profiles = await base44.entities.UserProfile.filter({ created_by: id });
+      if (profiles[0]) {
+        const p = profiles[0];
+        return {
+          ...p,
+          id: p.created_by || p.id,
+          firstName: p.first_name || "",
+          lastName: p.last_name || "",
+          emailAddress: p.email_address || "",
+          profilePicture: p.profile_picture || null,
+          is_verified: p.is_verified || false,
+          is_admin: false,
+          is_banned: false,
+        };
+      }
+      return null;
     } catch (error) {
       return null;
     }
@@ -495,13 +615,24 @@ export function FBAuthProvider({ children }) {
     if (!query.trim()) return [];
     const q = query.toLowerCase().trim();
     try {
-      const users = await base44.entities.User.list();
-      const accountMatches = users.filter(a => {
-        const fullName = `${a.firstName || ""} ${a.lastName || ""}`.toLowerCase();
-        const email = (a.emailAddress || "").toLowerCase();
-        const username = (a.username || "").toLowerCase();
-        return fullName.includes(q) || email.includes(q) || username.includes(q);
-      });
+      const profiles = await base44.entities.UserProfile.list();
+      const accountMatches = profiles
+        .filter(p => {
+          const fullName = `${p.first_name || ""} ${p.last_name || ""}`.toLowerCase();
+          const email = (p.email_address || "").toLowerCase();
+          return fullName.includes(q) || email.includes(q);
+        })
+        .map(p => ({
+          ...p,
+          id: p.created_by || p.id,
+          firstName: p.first_name || "",
+          lastName: p.last_name || "",
+          emailAddress: p.email_address || "",
+          profilePicture: p.profile_picture || null,
+          is_verified: p.is_verified || false,
+          is_admin: false,
+          is_banned: false,
+        }));
       const feedMatches = FEED_USERS.filter(u =>
         `${u.firstName} ${u.lastName}`.toLowerCase().includes(q)
       );
@@ -515,10 +646,22 @@ export function FBAuthProvider({ children }) {
 
   const adminUpdateUser = async (userId, updates) => {
     try {
-      const updated = await base44.entities.User.update(userId, updates);
+      // Map FB-style fields to UserProfile fields
+      const profileUpdates = {};
+      if (updates.firstName !== undefined) profileUpdates.first_name = updates.firstName;
+      if (updates.lastName !== undefined) profileUpdates.last_name = updates.lastName;
+      if (updates.emailAddress !== undefined) profileUpdates.email_address = updates.emailAddress;
+      if (updates.mobileNumber !== undefined) profileUpdates.mobile_number = updates.mobileNumber;
+      if (updates.profilePicture !== undefined) profileUpdates.profile_picture = updates.profilePicture;
+      if (updates.is_verified !== undefined) profileUpdates.is_verified = updates.is_verified;
+      const profiles = await base44.entities.UserProfile.filter({ created_by: userId });
+      if (profiles[0]) {
+        await base44.entities.UserProfile.update(profiles[0].id, profileUpdates);
+      }
       if (currentUser?.id === userId) {
-        localStorage.setItem("fbCurrentUser", JSON.stringify(updated));
-        setCurrentUser(updated);
+        const merged = { ...currentUser, ...updates };
+        localStorage.setItem("fbCurrentUser", JSON.stringify(merged));
+        setCurrentUser(merged);
       }
     } catch (error) {
       console.error("Admin update error:", error);
