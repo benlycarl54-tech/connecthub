@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { ChevronLeft, Send, Phone, Video, Info, Smile } from "lucide-react";
+import { format, parseISO, isToday, isYesterday } from "date-fns";
 import VerifiedBadge from "@/components/VerifiedBadge";
 
 const EMOJI_LIST = ["😀","😂","❤️","👍","🔥","😍","🙏","😭","💯","🎉"];
@@ -10,6 +11,22 @@ function getMessages(convoId) {
 }
 function saveMessages(convoId, msgs) {
   localStorage.setItem(`fb_msgs_${convoId}`, JSON.stringify(msgs));
+}
+
+// Format relative time
+function getRelativeTime(timeStr) {
+  const now = new Date();
+  const [hours, mins] = timeStr.split(":").map(Number);
+  const msgTime = new Date();
+  msgTime.setHours(hours, mins, 0);
+  const diffMs = now - msgTime;
+  const diffMins = Math.floor(diffMs / 60000);
+  
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins}m ago`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  return timeStr;
 }
 
 export default function ChatView({ convo, currentUser, onBack, onSend }) {
@@ -109,7 +126,7 @@ export default function ChatView({ convo, currentUser, onBack, onSend }) {
       </div>
 
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1 bg-white">
+      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-3 bg-white">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-300 mb-3">
@@ -129,53 +146,67 @@ export default function ChatView({ convo, currentUser, onBack, onSend }) {
         {grouped.map((group, gi) => {
           const isMe = group.from === currentUser.id;
           return (
-            <div key={gi} className={`flex flex-col gap-0.5 ${isMe ? "items-end" : "items-start"} mb-2`}>
-              {group.msgs.map((msg, mi) => {
-                const isFirst = mi === 0;
-                const isLast = mi === group.msgs.length - 1;
-                return (
-                  <div key={msg.id} className={`flex items-end gap-2 ${isMe ? "flex-row-reverse" : "flex-row"}`}>
-                    {/* Avatar — only for last message in group from other person */}
-                    {!isMe && isLast ? (
-                      <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-300 flex-shrink-0 mb-1">
-                        {convo.otherAvatar ? (
-                          <img src={convo.otherAvatar} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full bg-[#1877F2] flex items-center justify-center">
-                            <span className="text-white text-[10px] font-bold">{convo.otherName?.[0]}</span>
-                          </div>
+            <div key={gi}>
+              {/* Date separator */}
+              {gi === 0 && (
+                <div className="flex items-center gap-2 my-3">
+                  <div className="flex-1 h-px bg-gray-200" />
+                  <span className="text-xs text-gray-400 font-medium">Today</span>
+                  <div className="flex-1 h-px bg-gray-200" />
+                </div>
+              )}
+
+              <div className={`flex flex-col gap-0.5 ${isMe ? "items-end" : "items-start"} mb-2`}>
+                {group.msgs.map((msg, mi) => {
+                  const isFirst = mi === 0;
+                  const isLast = mi === group.msgs.length - 1;
+                  const relativeTime = getRelativeTime(msg.time);
+                  return (
+                    <div key={msg.id} className={`flex items-end gap-2 ${isMe ? "flex-row-reverse" : "flex-row"}`}>
+                      {/* Avatar — only for last message in group from other person */}
+                      {!isMe && isLast ? (
+                        <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-300 flex-shrink-0 mb-1">
+                          {convo.otherAvatar ? (
+                            <img src={convo.otherAvatar} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full bg-[#1877F2] flex items-center justify-center">
+                              <span className="text-white text-[10px] font-bold">{convo.otherName?.[0]}</span>
+                            </div>
+                          )}
+                        </div>
+                      ) : !isMe ? (
+                        <div className="w-6 flex-shrink-0" />
+                      ) : null}
+
+                      <div className={`flex items-end gap-1.5`}>
+                        <div className={`max-w-[72%] px-3.5 py-2 text-sm leading-relaxed
+                          ${isMe
+                            ? "bg-[#1877F2] text-white"
+                            : "bg-gray-100 text-gray-900"
+                          }
+                          ${isMe
+                            ? isFirst && isLast ? "rounded-2xl rounded-br-sm"
+                              : isFirst ? "rounded-2xl rounded-br-sm"
+                              : isLast ? "rounded-2xl rounded-tr-sm rounded-br-sm"
+                              : "rounded-2xl rounded-r-sm"
+                            : isFirst && isLast ? "rounded-2xl rounded-bl-sm"
+                              : isFirst ? "rounded-2xl rounded-bl-sm"
+                              : isLast ? "rounded-2xl rounded-tl-sm rounded-bl-sm"
+                              : "rounded-2xl rounded-l-sm"
+                          }`}
+                        >
+                          <p>{msg.text}</p>
+                        </div>
+                        {isLast && (
+                          <p className={`text-[10px] flex-shrink-0 whitespace-nowrap ${isMe ? "text-gray-400" : "text-gray-400"}`}>
+                            {relativeTime}
+                          </p>
                         )}
                       </div>
-                    ) : !isMe ? (
-                      <div className="w-6 flex-shrink-0" />
-                    ) : null}
-
-                    <div className={`max-w-[72%] px-3.5 py-2 text-sm leading-relaxed
-                      ${isMe
-                        ? "bg-[#1877F2] text-white"
-                        : "bg-gray-100 text-gray-900"
-                      }
-                      ${isMe
-                        ? isFirst && isLast ? "rounded-2xl rounded-br-sm"
-                          : isFirst ? "rounded-2xl rounded-br-sm"
-                          : isLast ? "rounded-2xl rounded-tr-sm rounded-br-sm"
-                          : "rounded-2xl rounded-r-sm"
-                        : isFirst && isLast ? "rounded-2xl rounded-bl-sm"
-                          : isFirst ? "rounded-2xl rounded-bl-sm"
-                          : isLast ? "rounded-2xl rounded-tl-sm rounded-bl-sm"
-                          : "rounded-2xl rounded-l-sm"
-                      }`}
-                    >
-                      <p>{msg.text}</p>
-                      {isLast && (
-                        <p className={`text-[10px] mt-0.5 ${isMe ? "text-blue-200" : "text-gray-400"}`}>
-                          {msg.time}
-                        </p>
-                      )}
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           );
         })}
