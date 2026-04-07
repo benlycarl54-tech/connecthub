@@ -3,7 +3,8 @@ import { Search, MoreHorizontal } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { useFBAuth } from "@/context/AuthContext";
-import { loadNotificationsForUser, markAllRead } from "@/context/AuthContext";
+import { loadNotificationsForUser, markAllRead, getNotificationsByType } from "@/context/AuthContext";
+import NotificationFilter from "@/components/notifications/NotificationFilter";
 
 const WELCOME_NOTIF = {
   id: "welcome",
@@ -33,6 +34,7 @@ export default function NotificationsPage() {
    const navigate = useNavigate();
    const { currentUser, acceptFriendRequest, declineFriendRequest } = useFBAuth();
    const [notifs, setNotifs] = useState([]);
+   const [activeFilter, setActiveFilter] = useState("all");
 
    useEffect(() => {
      if (!currentUser) return;
@@ -43,8 +45,12 @@ export default function NotificationsPage() {
      markAllRead(currentUser.id);
    }, [currentUser?.id]);
 
-   const newNotifs = notifs.filter(n => !n.read);
-   const earlierNotifs = notifs.filter(n => n.read);
+   const filteredNotifs = activeFilter === "all" 
+     ? notifs 
+     : getNotificationsByType(notifs, activeFilter);
+
+   const newNotifs = filteredNotifs.filter(n => !n.read);
+   const earlierNotifs = filteredNotifs.filter(n => n.read);
 
    const handleNotificationClick = (notif) => {
      if (notif.type === "friend_request") {
@@ -63,7 +69,7 @@ export default function NotificationsPage() {
   return (
     <div className="min-h-screen bg-white max-w-md mx-auto pb-20">
       {/* Header */}
-      <div className="bg-white sticky top-0 z-30 px-4 pt-4 pb-3 border-b border-gray-100">
+      <div className="bg-white sticky top-0 z-40 px-4 pt-4 pb-3 border-b border-gray-100">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-bold text-gray-900">Notifications</h1>
           <button onClick={() => navigate("/search")} className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center">
@@ -71,6 +77,9 @@ export default function NotificationsPage() {
           </button>
         </div>
       </div>
+
+      {/* Filter buttons */}
+      <NotificationFilter activeFilter={activeFilter} onFilterChange={setActiveFilter} />
 
       <div className="px-4 pt-4">
         {newNotifs.length > 0 && (

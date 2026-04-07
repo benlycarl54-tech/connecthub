@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ThumbsUp, MessageSquare, Share2, X, Send, Play, Volume2, VolumeX } from "lucide-react";
 import VerifiedBadge from "@/components/VerifiedBadge";
-import { useFBAuth, pushNotification } from "@/context/AuthContext";
+import { useFBAuth, pushNotification, notifyCommentMention } from "@/context/AuthContext";
 
 const REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "😡"];
 
@@ -117,31 +117,49 @@ export default function PostCard({ post, authorName, authorAvatar, authorVerifie
     setReaction(userLiked ? null : "👍");
   };
 
-  const submitComment = () => {
-    if (!commentText.trim()) return;
-    const newComment = {
-      id: Date.now(),
-      name: currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : "You",
-      avatar: currentUser?.profilePicture || null,
-      color: "bg-[#1877F2]",
-      text: commentText.trim(),
-      time: "Just now",
-      likes: 0,
-      replies: [],
-    };
-    setComments(prev => [...prev, newComment]);
-    setCommentText("");
-    if (currentUser && authorId && authorId !== currentUser.id && !authorId.startsWith("feed_")) {
-      pushNotification(authorId, {
-        type: "comment",
-        text: `${currentUser.firstName} ${currentUser.lastName} commented: "${commentText.trim().slice(0, 40)}${commentText.trim().length > 40 ? "…" : ""}"`,
-        avatar: currentUser.profilePicture || null,
-        avatarInitial: currentUser.firstName?.[0] || "?",
-        avatarColor: "bg-[#1877F2]",
-        actorName: `${currentUser.firstName} ${currentUser.lastName}`,
-      });
+  const extractMentions = (text) => {
+    const mentionRegex = /@(\w+)/g;
+    const mentions = [];
+    let match;
+    while ((match = mentionRegex.exec(text)) !== null) {
+      mentions.push(match[1]);
     }
+    return mentions;
   };
+
+  const submitComment = () => {
+     if (!commentText.trim()) return;
+     const newComment = {
+       id: Date.now(),
+       name: currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : "You",
+       avatar: currentUser?.profilePicture || null,
+       color: "bg-[#1877F2]",
+       text: commentText.trim(),
+       time: "Just now",
+       likes: 0,
+       replies: [],
+     };
+     setComments(prev => [...prev, newComment]);
+
+     // Check for @mentions in comment
+     const mentions = extractMentions(commentText);
+     if (mentions.length > 0) {
+       // In real app, resolve mention names to user IDs and send notifications
+       // For now, just log the mentions
+     }
+
+     setCommentText("");
+     if (currentUser && authorId && authorId !== currentUser.id && !authorId.startsWith("feed_")) {
+       pushNotification(authorId, {
+         type: "comment",
+         text: `${currentUser.firstName} ${currentUser.lastName} commented: "${commentText.trim().slice(0, 40)}${commentText.trim().length > 40 ? "…" : ""}"`,
+         avatar: currentUser.profilePicture || null,
+         avatarInitial: currentUser.firstName?.[0] || "?",
+         avatarColor: "bg-[#1877F2]",
+         actorName: `${currentUser.firstName} ${currentUser.lastName}`,
+       });
+     }
+   };
 
   const submitReply = (commentId) => {
     if (!replyText.trim()) return;
