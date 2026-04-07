@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Search, X, UserPlus, Check } from "lucide-react";
+import { ArrowLeft, Search, X, UserPlus, Check, MessageCircle } from "lucide-react";
 import { useFBAuth } from "@/context/AuthContext";
 import VerifiedBadge from "@/components/VerifiedBadge";
 
@@ -102,22 +102,24 @@ export default function SearchPage() {
                       </p>
                     </div>
 
-                    {/* Follow button — only for other users */}
+                    {/* Action buttons — only for other users */}
                     {!isMe && (
-                     <button
-                       onClick={(e) => { e.stopPropagation(); handleFollow(e, user); }}
-                        className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${
-                          following
-                            ? "bg-gray-100 text-gray-700"
-                            : "bg-[#1877F2] text-white"
-                        }`}
-                      >
-                        {following ? (
-                          <><Check className="w-3.5 h-3.5" /> Following</>
-                        ) : (
-                          <><UserPlus className="w-3.5 h-3.5" /> Follow</>
-                        )}
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleFollow(e, user); }}
+                          className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${
+                            following ? "bg-gray-100 text-gray-700" : "bg-[#1877F2] text-white"
+                          }`}
+                        >
+                          {following ? <><Check className="w-3.5 h-3.5" /> Following</> : <><UserPlus className="w-3.5 h-3.5" /> Follow</>}
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); navigate("/messages", { state: { startChatWith: user } }); }}
+                          className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center"
+                        >
+                          <MessageCircle className="w-4 h-4 text-gray-600" />
+                        </button>
+                      </div>
                     )}
                   </div>
                 );

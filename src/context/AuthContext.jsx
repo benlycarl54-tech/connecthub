@@ -337,26 +337,33 @@ export function FBAuthProvider({ children }) {
   const getAllUsers = async () => {
     try {
       const profiles = await base44.entities.UserProfile.list();
-      // Normalize to FB-style user objects
-      const normalized = profiles.map(p => ({
-        ...p,
-        id: p.created_by || p.id,
-        firstName: p.first_name || "",
-        lastName: p.last_name || "",
-        emailAddress: p.email_address || "",
-        mobileNumber: p.mobile_number || "",
-        profilePicture: p.profile_picture || null,
-        is_verified: p.is_verified || false,
-        is_admin: false,
-        is_banned: false,
-        followers: 0,
-        following: 0,
-        likes: 0,
-      }));
-      return [...normalized, ...FEED_USERS];
+      // Normalize to FB-style user objects, deduplicate by id
+      const seen = new Set();
+      const normalized = profiles
+        .map(p => ({
+          ...p,
+          id: p.created_by || p.id,
+          firstName: p.first_name || "",
+          lastName: p.last_name || "",
+          emailAddress: p.email_address || "",
+          mobileNumber: p.mobile_number || "",
+          profilePicture: p.profile_picture || null,
+          is_verified: p.is_verified || false,
+          is_admin: false,
+          is_banned: false,
+          followers: p.followers || 0,
+          following: p.following || 0,
+          likes: p.likes || 0,
+        }))
+        .filter(p => {
+          if (seen.has(p.id)) return false;
+          seen.add(p.id);
+          return true;
+        });
+      return normalized;
     } catch (error) {
       console.error("Get all users error:", error);
-      return FEED_USERS;
+      return [];
     }
   };
 
@@ -624,7 +631,8 @@ export function FBAuthProvider({ children }) {
     const q = query.toLowerCase().trim();
     try {
       const profiles = await base44.entities.UserProfile.list();
-      const accountMatches = profiles
+      const seen = new Set();
+      return profiles
         .filter(p => {
           const fullName = `${p.first_name || ""} ${p.last_name || ""}`.toLowerCase();
           const email = (p.email_address || "").toLowerCase();
@@ -640,15 +648,17 @@ export function FBAuthProvider({ children }) {
           is_verified: p.is_verified || false,
           is_admin: false,
           is_banned: false,
-        }));
-      const feedMatches = FEED_USERS.filter(u =>
-        `${u.firstName} ${u.lastName}`.toLowerCase().includes(q)
-      );
-      return [...accountMatches, ...feedMatches];
+          followers: p.followers || 0,
+          following: p.following || 0,
+          likes: p.likes || 0,
+        }))
+        .filter(p => {
+          if (seen.has(p.id)) return false;
+          seen.add(p.id);
+          return true;
+        });
     } catch (error) {
-      return FEED_USERS.filter(u =>
-        `${u.firstName} ${u.lastName}`.toLowerCase().includes(q)
-      );
+      return [];
     }
   };
 
