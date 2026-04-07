@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { base44 } from "@/api/base44Client";
 import { useFBAuth } from "@/context/AuthContext";
 import ConversationList from "@/components/messages/ConversationList";
 import ChatView from "@/components/messages/ChatView";
@@ -20,10 +21,21 @@ export default function Messages() {
   const [showNewChat, setShowNewChat] = useState(false);
   const [search, setSearch] = useState("");
 
-  // Load conversations & poll for updates every 3s
+  // Load conversations & poll for updates every 3s, refresh verification status
   useEffect(() => {
     if (!currentUser) return;
-    const load = () => setConversations(getConversations(currentUser.id));
+    const load = async () => {
+      const convos = getConversations(currentUser.id);
+      // Refresh verification status for each user
+      const updated = await Promise.all(
+        convos.map(async (c) => {
+          const profiles = await base44.entities.UserProfile.filter({ created_by: c.otherId });
+          const isVerified = profiles[0]?.is_verified || false;
+          return { ...c, is_verified: isVerified };
+        })
+      );
+      setConversations(updated);
+    };
     load();
     const interval = setInterval(load, 3000);
     return () => clearInterval(interval);
@@ -87,12 +99,16 @@ export default function Messages() {
     saveConversations(convo.otherId, updatedRecipient);
   };
 
-  const handleOpenConvo = (convo) => {
+  const handleOpenConvo = async (convo) => {
     // Clear unread when opening
     const updated = conversations.map(c => c.id === convo.id ? { ...c, unread: 0 } : c);
     setConversations(updated);
     saveConversations(currentUser.id, updated);
-    setActiveConvo({ ...convo, unread: 0 });
+    
+    // Refresh verification status for the other user
+    const profiles = await base44.entities.UserProfile.filter({ created_by: convo.otherId });
+    const isVerified = profiles[0]?.is_verified || false;
+    setActiveConvo({ ...convo, unread: 0, is_verified: isVerified });
   };
 
   if (!currentUser) return null;
