@@ -110,7 +110,14 @@ export default function Messages() {
     setText("");
   };
 
-  const allUsers = getAllUsers().filter(u => u.id !== currentUser?.id);
+  const [allUsers, setAllUsers] = useState([]);
+
+  useEffect(() => {
+    if (currentUser) {
+      getAllUsers().then(users => setAllUsers(users.filter(u => u.id !== currentUser.id)));
+    }
+  }, [currentUser]);
+
   const filteredUsers = allUsers.filter(u =>
     `${u.firstName} ${u.lastName}`.toLowerCase().includes(search.toLowerCase())
   );
