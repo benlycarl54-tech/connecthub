@@ -182,6 +182,7 @@ export function FBAuthProvider({ children }) {
       if (updates.firstName !== undefined) profileUpdates.first_name = updates.firstName;
       if (updates.lastName !== undefined) profileUpdates.last_name = updates.lastName;
       if (updates.profilePicture !== undefined) profileUpdates.profile_picture = updates.profilePicture;
+      if (updates.coverPhoto !== undefined) profileUpdates.cover_photo = updates.coverPhoto;
       if (updates.is_verified !== undefined) profileUpdates.is_verified = updates.is_verified;
       if (updates.followers !== undefined) profileUpdates.followers = updates.followers;
       if (updates.following !== undefined) profileUpdates.following = updates.following;
@@ -372,6 +373,7 @@ export function FBAuthProvider({ children }) {
           lastName: p.last_name || "",
           emailAddress: p.email_address || "",
           profilePicture: p.profile_picture || null,
+          coverPhoto: p.cover_photo || null,
           is_verified: p.is_verified || false,
           is_admin: false,
           is_banned: false,

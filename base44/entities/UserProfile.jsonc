@@ -36,6 +36,10 @@
       "type": "string",
       "description": "URL to profile picture"
     },
+    "cover_photo": {
+      "type": "string",
+      "description": "URL to cover photo"
+    },
     "signup_method": {
       "type": "string",
       "enum": [

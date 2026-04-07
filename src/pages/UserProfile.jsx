@@ -100,9 +100,11 @@ export default function UserProfile() {
 
       {/* Cover photo */}
       <div className={`w-full h-52 bg-gradient-to-br ${theme.cover} -mt-14`}>
-        {user.profilePicture && (
+        {user.coverPhoto ? (
+          <img src={user.coverPhoto} alt="cover" className="w-full h-full object-cover" />
+        ) : user.profilePicture ? (
           <img src={user.profilePicture} alt="cover" className="w-full h-full object-cover opacity-40" />
-        )}
+        ) : null}
       </div>
 
       {/* Profile card */}
