@@ -56,6 +56,10 @@ export default function UserProfile() {
       }
     }
     load();
+
+    // Refresh profile every 2 seconds to show live stat updates
+    const interval = setInterval(load, 2000);
+    return () => clearInterval(interval);
   }, [userId, currentUser, getUserById, isFriend, hasPendingRequest]);
 
   if (!user) {

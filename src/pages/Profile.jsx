@@ -51,7 +51,7 @@ function formatCount(n) {
 
 export default function Profile() {
   const navigate = useNavigate();
-  const { currentUser, logout, updateCurrentUser } = useFBAuth();
+  const { currentUser, logout, updateCurrentUser, getUserById } = useFBAuth();
   const { data } = useRegister();
   const [activeTab, setActiveTab] = useState("All");
   const [showBanner, setShowBanner] = useState(true);
@@ -65,6 +65,7 @@ export default function Profile() {
   const [isProMode, setIsProMode] = useState(() => {
     try { return JSON.parse(localStorage.getItem("fb_pro_mode") || "false"); } catch { return false; }
   });
+  const [userStats, setUserStats] = useState({ followers: 0, following: 0, likes: 0 });
 
   const user = currentUser || data;
   const fullName = `${user.firstName || "Your"} ${user.lastName || "Name"}`;
@@ -80,6 +81,24 @@ export default function Profile() {
       getUserPosts(currentUser.id).then(posts => setMyPosts(posts));
     }
   }, [currentUser?.id, postRefresh]);
+
+  // Refresh user stats every 2 seconds to show live updates
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    const refreshStats = async () => {
+      const profile = await getUserById(currentUser.id);
+      if (profile) {
+        setUserStats({
+          followers: profile.followers || 0,
+          following: profile.following || 0,
+          likes: profile.likes || 0,
+        });
+      }
+    };
+    refreshStats();
+    const interval = setInterval(refreshStats, 2000);
+    return () => clearInterval(interval);
+  }, [currentUser?.id, getUserById]);
 
   const handleNewPost = (post) => {
     setPostRefresh(r => r + 1);
@@ -315,11 +334,11 @@ export default function Profile() {
               )}
             </div>
             <p className="text-sm text-gray-800 mb-1">
-              <span className="font-bold">{formatCount(currentUser?.followers || 0)}</span>
+              <span className="font-bold">{formatCount(userStats.followers)}</span>
               <span className="text-gray-500"> followers · </span>
-              <span className="font-bold">{formatCount(currentUser?.following || 0)}</span>
+              <span className="font-bold">{formatCount(userStats.following)}</span>
               <span className="text-gray-500"> following · </span>
-              <span className="font-bold">{formatCount(currentUser?.likes || 0)}</span>
+              <span className="font-bold">{formatCount(userStats.likes)}</span>
               <span className="text-gray-500"> posts</span>
             </p>
 
