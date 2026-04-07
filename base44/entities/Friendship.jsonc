@@ -1,0 +1,18 @@
+{
+  "name": "Friendship",
+  "type": "object",
+  "properties": {
+    "user1_id": {
+      "type": "string",
+      "description": "First user ID (always the smaller ID alphabetically)"
+    },
+    "user2_id": {
+      "type": "string",
+      "description": "Second user ID"
+    }
+  },
+  "required": [
+    "user1_id",
+    "user2_id"
+  ]
+}

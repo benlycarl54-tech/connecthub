@@ -161,81 +161,81 @@ export function FBAuthProvider({ children }) {
     return following.includes(targetUserId);
   };
 
-  // Friend request management
-  const sendFriendRequest = (targetUserId) => {
+  // Friend request management — DB-backed
+  const sendFriendRequest = async (targetUserId) => {
     if (!currentUser || currentUser.id === targetUserId) return;
-    const requestsKey = `fb_friend_requests_${targetUserId}`;
-    const requests = JSON.parse(localStorage.getItem(requestsKey) || "[]");
-    if (!requests.includes(currentUser.id)) {
-      requests.push(currentUser.id);
-      localStorage.setItem(requestsKey, JSON.stringify(requests));
-      pushNotification(targetUserId, {
-        type: "friend_request",
-        text: `${currentUser.firstName} ${currentUser.lastName} sent you a friend request.`,
-        avatar: currentUser.profilePicture || null,
-        avatarInitial: currentUser.firstName?.[0] || "?",
-        avatarColor: "bg-[#1877F2]",
-        actorName: `${currentUser.firstName} ${currentUser.lastName}`,
-      });
-    }
+    // Check if already sent
+    const existing = await base44.entities.FriendRequest.filter({ from_user_id: currentUser.id, to_user_id: targetUserId, status: "pending" });
+    if (existing.length > 0) return;
+    await base44.entities.FriendRequest.create({
+      from_user_id: currentUser.id,
+      from_first_name: currentUser.firstName,
+      from_last_name: currentUser.lastName,
+      from_avatar: currentUser.profilePicture || null,
+      to_user_id: targetUserId,
+      status: "pending",
+    });
+    pushNotification(targetUserId, {
+      type: "friend_request",
+      text: `${currentUser.firstName} ${currentUser.lastName} sent you a friend request.`,
+      avatar: currentUser.profilePicture || null,
+      avatarInitial: currentUser.firstName?.[0] || "?",
+      avatarColor: "bg-[#1877F2]",
+      actorName: `${currentUser.firstName} ${currentUser.lastName}`,
+    });
   };
 
-  const acceptFriendRequest = (senderId) => {
+  const acceptFriendRequest = async (requestId) => {
     if (!currentUser) return;
-    const requestsKey = `fb_friend_requests_${currentUser.id}`;
-    const requests = JSON.parse(localStorage.getItem(requestsKey) || "[]");
-    const updated = requests.filter(id => id !== senderId);
-    localStorage.setItem(requestsKey, JSON.stringify(updated));
-    
-    const friendsKey = `fb_friends_${currentUser.id}`;
-    const friends = JSON.parse(localStorage.getItem(friendsKey) || "[]");
-    if (!friends.includes(senderId)) {
-      friends.push(senderId);
-      localStorage.setItem(friendsKey, JSON.stringify(friends));
-    }
-    
-    const senderFriendsKey = `fb_friends_${senderId}`;
-    const senderFriends = JSON.parse(localStorage.getItem(senderFriendsKey) || "[]");
-    if (!senderFriends.includes(currentUser.id)) {
-      senderFriends.push(currentUser.id);
-      localStorage.setItem(senderFriendsKey, JSON.stringify(senderFriends));
+    await base44.entities.FriendRequest.update(requestId, { status: "accepted" });
+    // Create friendship record (sorted IDs to avoid duplicates)
+    const req = await base44.entities.FriendRequest.get(requestId);
+    const [u1, u2] = [req.from_user_id, currentUser.id].sort();
+    const existing = await base44.entities.Friendship.filter({ user1_id: u1, user2_id: u2 });
+    if (existing.length === 0) {
+      await base44.entities.Friendship.create({ user1_id: u1, user2_id: u2 });
     }
   };
 
-  const declineFriendRequest = (senderId) => {
+  const declineFriendRequest = async (requestId) => {
     if (!currentUser) return;
-    const requestsKey = `fb_friend_requests_${currentUser.id}`;
-    const requests = JSON.parse(localStorage.getItem(requestsKey) || "[]");
-    const updated = requests.filter(id => id !== senderId);
-    localStorage.setItem(requestsKey, JSON.stringify(updated));
+    await base44.entities.FriendRequest.update(requestId, { status: "declined" });
   };
 
-  const getFriendRequests = () => {
+  const getFriendRequests = async () => {
     if (!currentUser) return [];
-    const requestsKey = `fb_friend_requests_${currentUser.id}`;
-    const requests = JSON.parse(localStorage.getItem(requestsKey) || "[]");
-    return requests.map(id => getUserById(id)).filter(Boolean);
+    return await base44.entities.FriendRequest.filter({ to_user_id: currentUser.id, status: "pending" });
   };
 
-  const getFriends = () => {
+  const getFriends = async () => {
     if (!currentUser) return [];
-    const friendsKey = `fb_friends_${currentUser.id}`;
-    const friends = JSON.parse(localStorage.getItem(friendsKey) || "[]");
-    return friends.map(id => getUserById(id)).filter(Boolean);
+    const [f1, f2] = await Promise.all([
+      base44.entities.Friendship.filter({ user1_id: currentUser.id }),
+      base44.entities.Friendship.filter({ user2_id: currentUser.id }),
+    ]);
+    const allFriendships = [...f1, ...f2];
+    const friendIds = allFriendships.map(f => f.user1_id === currentUser.id ? f.user2_id : f.user1_id);
+    const users = await Promise.all(friendIds.map(id => base44.entities.User.get(id).catch(() => null)));
+    return users.filter(Boolean);
   };
 
-  const isFriend = (userId) => {
+  const isFriend = async (userId) => {
     if (!currentUser) return false;
-    const friendsKey = `fb_friends_${currentUser.id}`;
-    const friends = JSON.parse(localStorage.getItem(friendsKey) || "[]");
-    return friends.includes(userId);
+    const [u1, u2] = [currentUser.id, userId].sort();
+    const existing = await base44.entities.Friendship.filter({ user1_id: u1, user2_id: u2 });
+    return existing.length > 0;
   };
 
-  const hasPendingRequest = (userId) => {
+  const hasPendingRequest = async (userId) => {
     if (!currentUser) return false;
-    const requestsKey = `fb_friend_requests_${currentUser.id}`;
-    const requests = JSON.parse(localStorage.getItem(requestsKey) || "[]");
-    return requests.includes(userId);
+    const existing = await base44.entities.FriendRequest.filter({ from_user_id: currentUser.id, to_user_id: userId, status: "pending" });
+    return existing.length > 0;
+  };
+
+  const getPendingRequestCount = async () => {
+    if (!currentUser) return 0;
+    const reqs = await base44.entities.FriendRequest.filter({ to_user_id: currentUser.id, status: "pending" });
+    return reqs.length;
   };
 
   const getAllUsers = async () => {
@@ -531,7 +531,7 @@ export function FBAuthProvider({ children }) {
       updateCurrentUser, getAllUsers, getUserById, searchUsers,
       adminUpdateUser, followUser, isFollowing,
       sendFriendRequest, acceptFriendRequest, declineFriendRequest,
-      getFriendRequests, getFriends, isFriend, hasPendingRequest,
+      getFriendRequests, getFriends, isFriend, hasPendingRequest, getPendingRequestCount,
       createAlbum, getAlbumById, getUserAlbums, addPhotoToAlbum,
       getAlbumPhotos, removePhotoFromAlbum,
       createGroup, getGroupsByUser, getGroupById, getGroupMembers,

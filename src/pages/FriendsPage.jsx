@@ -1,56 +1,61 @@
 import { useState, useEffect } from "react";
-import { Search, UserPlus, Check, X } from "lucide-react";
+import { Search, UserPlus, Check, X, ChevronLeft } from "lucide-react";
 import { useFBAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
-
-const SUGGESTED = [
-  { id: "s1", name: "Amara Johnson", mutual: 3, bg: "bg-pink-400" },
-  { id: "s2", name: "Kofi Mensah", mutual: 5, bg: "bg-blue-500" },
-  { id: "s3", name: "Fatima Al-Hassan", mutual: 2, bg: "bg-teal-500" },
-  { id: "s4", name: "David Osei", mutual: 7, bg: "bg-orange-400" },
-  { id: "s5", name: "Ngozi Williams", mutual: 1, bg: "bg-purple-500" },
-  { id: "s6", name: "Emmanuel Darko", mutual: 4, bg: "bg-green-500" },
-  { id: "s7", name: "Ama Boateng", mutual: 6, bg: "bg-red-400" },
-  { id: "s8", name: "Kwame Asante", mutual: 2, bg: "bg-yellow-500" },
-  { id: "s9", name: "Abena Frimpong", mutual: 3, bg: "bg-indigo-400" },
-  { id: "s10", name: "Yaw Mensah", mutual: 8, bg: "bg-rose-400" },
-];
-
 export default function FriendsPage() {
   const navigate = useNavigate();
-  const { getAllUsers, currentUser, getFriendRequests, getFriends: getContextFriends, sendFriendRequest, acceptFriendRequest, declineFriendRequest, getUserById } = useFBAuth();
+  const { getAllUsers, currentUser, getFriendRequests, getFriends, sendFriendRequest, acceptFriendRequest, declineFriendRequest, isFriend, hasPendingRequest } = useFBAuth();
   const [activeTab, setActiveTab] = useState("requests");
-  const [added, setAdded] = useState({});
   const [requests, setRequests] = useState([]);
   const [friends, setFriends] = useState([]);
+  const [suggestions, setSuggestions] = useState([]);
+  const [requestStatus, setRequestStatus] = useState({}); // id -> "sent" | "friend"
+  const [loading, setLoading] = useState(true);
+
+  const loadData = async () => {
+    setLoading(true);
+    const [reqs, frds, allUsers] = await Promise.all([
+      getFriendRequests(),
+      getFriends(),
+      getAllUsers(),
+    ]);
+    setRequests(reqs);
+    setFriends(frds);
+    const friendIds = new Set(frds.map(f => f.id));
+    const reqFromIds = new Set(reqs.map(r => r.from_user_id));
+    const sugg = allUsers.filter(u => u.id !== currentUser?.id && !u.id?.startsWith("feed_") && !friendIds.has(u.id) && !reqFromIds.has(u.id));
+    setSuggestions(sugg);
+    setLoading(false);
+  };
 
   useEffect(() => {
-    setRequests(getFriendRequests());
-    setFriends(getContextFriends());
-  }, []);
+    if (currentUser) loadData();
+  }, [currentUser]);
 
-  const allUsers = getAllUsers().filter(u => u.id !== currentUser?.id).slice(0, 6);
-
-  const sendRequest = (user) => {
-    const uid = user.id || user.name;
-    if (added[uid]) return;
-    sendFriendRequest(uid);
-    setAdded(prev => ({ ...prev, [uid]: true }));
+  const handleSendRequest = async (user) => {
+    setRequestStatus(prev => ({ ...prev, [user.id]: "sent" }));
+    await sendFriendRequest(user.id);
   };
 
-  const acceptRequest = (user) => {
-    acceptFriendRequest(user.id);
-    setRequests(prev => prev.filter(r => r.id !== user.id));
-    setFriends(prev => [...prev, user]);
+  const handleAccept = async (req) => {
+    await acceptFriendRequest(req.id);
+    setRequests(prev => prev.filter(r => r.id !== req.id));
+    setFriends(prev => [...prev, { id: req.from_user_id, firstName: req.from_first_name, lastName: req.from_last_name, profilePicture: req.from_avatar }]);
   };
 
-  const declineRequest = (user) => {
-    declineFriendRequest(user.id);
-    setRequests(prev => prev.filter(r => r.id !== user.id));
+  const handleDecline = async (req) => {
+    await declineFriendRequest(req.id);
+    setRequests(prev => prev.filter(r => r.id !== req.id));
   };
 
-  const suggestions = [...allUsers, ...SUGGESTED];
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white max-w-md mx-auto flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-gray-200 border-t-[#1877F2] rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white max-w-md mx-auto pb-20">
@@ -58,8 +63,8 @@ export default function FriendsPage() {
       <div className="bg-white sticky top-0 z-30 px-4 pt-4 pb-0">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
-            <button className="w-8 h-8 flex items-center justify-center">
-              <span className="text-xl font-bold text-gray-800">☰</span>
+            <button onClick={() => navigate("/home")} className="w-8 h-8 flex items-center justify-center">
+              <ChevronLeft className="w-6 h-6 text-gray-800" />
             </button>
             <h1 className="text-xl font-bold text-gray-900">Friends</h1>
           </div>
@@ -72,13 +77,18 @@ export default function FriendsPage() {
         <div className="flex gap-2 pb-3">
           <button
             onClick={() => setActiveTab("requests")}
-            className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-colors ${activeTab === "requests" ? "bg-blue-100 text-[#1877F2] border-transparent" : "bg-gray-100 text-gray-700 border-transparent"}`}
+            className={`relative px-4 py-1.5 rounded-full text-sm font-semibold transition-colors ${activeTab === "requests" ? "bg-blue-100 text-[#1877F2]" : "bg-gray-100 text-gray-700"}`}
           >
             Friend requests
+            {requests.length > 0 && (
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                {requests.length}
+              </span>
+            )}
           </button>
           <button
             onClick={() => setActiveTab("friends")}
-            className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-colors ${activeTab === "friends" ? "bg-blue-100 text-[#1877F2] border-transparent" : "bg-gray-100 text-gray-700 border-transparent"}`}
+            className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors ${activeTab === "friends" ? "bg-blue-100 text-[#1877F2]" : "bg-gray-100 text-gray-700"}`}
           >
             Your friends
           </button>
@@ -88,10 +98,8 @@ export default function FriendsPage() {
 
       {activeTab === "requests" && (
         <div className="px-4">
-           {requests.length === 0 ? (
-            /* Empty state — matches screenshot exactly */
+          {requests.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16">
-              {/* Blue card icon */}
               <div className="w-36 h-44 bg-gradient-to-b from-blue-300 to-blue-500 rounded-2xl flex flex-col items-center justify-center mb-6 shadow-md">
                 <div className="w-16 h-16 rounded-full bg-blue-200 flex items-center justify-center mb-3">
                   <div className="w-10 h-10 rounded-full bg-blue-400 flex items-center justify-center">
@@ -102,31 +110,30 @@ export default function FriendsPage() {
                 <div className="w-10 h-1.5 bg-blue-700 rounded-full" />
               </div>
               <p className="text-lg font-bold text-gray-900 mb-2">No new requests</p>
-              <p className="text-sm text-gray-500 text-center mb-6 px-4 leading-relaxed">
-                Try uploading your phone contacts so you can find your friends on Facebook.
+              <p className="text-sm text-gray-500 text-center px-4 leading-relaxed">
+                When someone sends you a friend request, it will appear here.
               </p>
-              <button className="px-8 py-2.5 bg-blue-50 text-[#1877F2] font-semibold rounded-full text-sm">
-                Upload contacts
-              </button>
             </div>
           ) : (
             <div className="py-4 space-y-4">
               <p className="font-bold text-gray-900">Friend requests ({requests.length})</p>
               {requests.map((req) => {
-                const name = req.firstName ? `${req.firstName} ${req.lastName || ""}`.trim() : req.name;
+                const name = `${req.from_first_name || ""} ${req.from_last_name || ""}`.trim();
                 return (
                   <div key={req.id} className="flex items-center gap-3">
-                    <div className={`w-16 h-16 rounded-full ${req.bg || "bg-blue-500"} flex items-center justify-center flex-shrink-0 overflow-hidden`}>
-                      {req.profilePicture ? <img src={req.profilePicture} className="w-full h-full object-cover" alt="" /> : (
+                    <button onClick={() => navigate(`/user/${req.from_user_id}`)} className="w-16 h-16 rounded-full bg-[#1877F2] flex items-center justify-center flex-shrink-0 overflow-hidden">
+                      {req.from_avatar ? (
+                        <img src={req.from_avatar} className="w-full h-full object-cover" alt="" />
+                      ) : (
                         <span className="text-white text-2xl font-bold">{name?.[0]}</span>
                       )}
-                    </div>
+                    </button>
                     <div className="flex-1">
                       <p className="font-semibold text-gray-900 text-sm">{name}</p>
-                      <p className="text-xs text-gray-400">Recently</p>
+                      <p className="text-xs text-gray-400">Sent you a friend request</p>
                       <div className="flex gap-2 mt-2">
-                        <button onClick={() => acceptRequest(req)} className="flex-1 bg-[#1877F2] text-white font-semibold py-1.5 rounded-lg text-sm">Confirm</button>
-                        <button onClick={() => declineRequest(req)} className="flex-1 bg-gray-100 text-gray-800 font-semibold py-1.5 rounded-lg text-sm">Delete</button>
+                        <button onClick={() => handleAccept(req)} className="flex-1 bg-[#1877F2] text-white font-semibold py-1.5 rounded-lg text-sm">Confirm</button>
+                        <button onClick={() => handleDecline(req)} className="flex-1 bg-gray-100 text-gray-800 font-semibold py-1.5 rounded-lg text-sm">Delete</button>
                       </div>
                     </div>
                   </div>
@@ -136,40 +143,38 @@ export default function FriendsPage() {
           )}
 
           {/* People you may know */}
-          <div className="py-4">
-            <p className="font-bold text-gray-900 mb-4">People you may know</p>
-            <div className="space-y-5">
-              {suggestions.map((user, i) => {
-                const uid = user.id || user.name;
-                const name = user.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : user.name;
-                const isAdded = added[uid];
-                const isFriend = friends.some(f => f.id === user.id);
-                if (isFriend) return null;
-                return (
-                  <div key={uid + i} className="flex items-center gap-3">
-                    <button onClick={() => user.id && !user.id.startsWith("s") && navigate(`/user/${user.id}`)} className={`w-14 h-14 rounded-full ${user.bg || "bg-blue-500"} flex items-center justify-center flex-shrink-0 overflow-hidden`}>
-                      {user.profilePicture ? <img src={user.profilePicture} className="w-full h-full object-cover" alt="" /> : (
-                        <span className="text-white text-xl font-bold">{name?.[0]}</span>
-                      )}
-                    </button>
-                    <div className="flex-1">
-                      <p className="font-semibold text-gray-900 text-sm leading-tight">{name}</p>
-                      {(user.mutual || 0) > 0 && <p className="text-xs text-gray-400 mt-0.5">{user.mutual} mutual friends</p>}
-                      <button
-                        onClick={() => sendRequest(user)}
-                        className={`mt-2 flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors ${isAdded ? "bg-gray-100 text-gray-500" : "bg-[#E7F3FF] text-[#1877F2]"}`}
-                      >
-                        {isAdded ? <><Check className="w-3.5 h-3.5" /> Request sent</> : <><UserPlus className="w-3.5 h-3.5" /> Add friend</>}
+          {suggestions.length > 0 && (
+            <div className="py-4">
+              <p className="font-bold text-gray-900 mb-4">People you may know</p>
+              <div className="space-y-5">
+                {suggestions.slice(0, 10).map((user) => {
+                  const name = `${user.firstName || ""} ${user.lastName || ""}`.trim();
+                  const status = requestStatus[user.id];
+                  return (
+                    <div key={user.id} className="flex items-center gap-3">
+                      <button onClick={() => navigate(`/user/${user.id}`)} className="w-14 h-14 rounded-full bg-[#1877F2] flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        {user.profilePicture ? (
+                          <img src={user.profilePicture} className="w-full h-full object-cover" alt="" />
+                        ) : (
+                          <span className="text-white text-xl font-bold">{name?.[0]}</span>
+                        )}
                       </button>
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-900 text-sm leading-tight">{name}</p>
+                        <button
+                          onClick={() => handleSendRequest(user)}
+                          disabled={status === "sent"}
+                          className={`mt-2 flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors ${status === "sent" ? "bg-gray-100 text-gray-500" : "bg-[#E7F3FF] text-[#1877F2]"}`}
+                        >
+                          {status === "sent" ? <><Check className="w-3.5 h-3.5" /> Request sent</> : <><UserPlus className="w-3.5 h-3.5" /> Add friend</>}
+                        </button>
+                      </div>
                     </div>
-                    <button onClick={() => {}} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 flex-shrink-0">
-                      <X className="w-4 h-4 text-gray-400" />
-                    </button>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
@@ -186,19 +191,21 @@ export default function FriendsPage() {
           ) : (
             <div className="space-y-4">
               {friends.map((f) => {
-                const name = f.firstName ? `${f.firstName} ${f.lastName || ""}`.trim() : f.name;
+                const name = `${f.firstName || ""} ${f.lastName || ""}`.trim();
                 return (
                   <div key={f.id} className="flex items-center gap-3">
-                    <div className={`w-14 h-14 rounded-full ${f.bg || "bg-blue-500"} flex items-center justify-center overflow-hidden flex-shrink-0`}>
-                      {f.profilePicture ? <img src={f.profilePicture} className="w-full h-full object-cover" alt="" /> : (
+                    <button onClick={() => navigate(`/user/${f.id}`)} className="w-14 h-14 rounded-full bg-[#1877F2] flex items-center justify-center overflow-hidden flex-shrink-0">
+                      {f.profilePicture ? (
+                        <img src={f.profilePicture} className="w-full h-full object-cover" alt="" />
+                      ) : (
                         <span className="text-white text-xl font-bold">{name?.[0]}</span>
                       )}
-                    </div>
+                    </button>
                     <div className="flex-1">
                       <p className="font-semibold text-gray-900">{name}</p>
                       <p className="text-xs text-gray-400">Friends</p>
                     </div>
-                    <button className="px-4 py-1.5 bg-gray-100 rounded-lg text-sm font-semibold text-gray-700">Message</button>
+                    <button onClick={() => navigate("/messages", { state: { startChatWith: f } })} className="px-4 py-1.5 bg-gray-100 rounded-lg text-sm font-semibold text-gray-700">Message</button>
                   </div>
                 );
               })}
@@ -206,7 +213,6 @@ export default function FriendsPage() {
           )}
         </div>
       )}
-
     </div>
   );
 }

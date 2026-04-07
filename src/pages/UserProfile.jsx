@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ChevronLeft, Search, MoreHorizontal, UserPlus, MessageCircle, Link2, MapPin, Star, Clock, Mail, Check } from "lucide-react";
 import VerifiedBadge from "@/components/VerifiedBadge";
@@ -19,9 +19,23 @@ const PROFILE_THEMES = [
 export default function UserProfile() {
   const navigate = useNavigate();
   const { userId } = useParams();
-  const { getUserById, currentUser, followUser, isFollowing, getAllUsers } = useFBAuth();
+  const { getUserById, currentUser, followUser, isFollowing, getAllUsers, sendFriendRequest, isFriend, hasPendingRequest } = useFBAuth();
   const [localFollowing, setLocalFollowing] = useState(null);
   const [activeTab, setActiveTab] = useState("All");
+  const [actualUser, setActualUser] = useState(null);
+  const [friendStatus, setFriendStatus] = useState("none"); // "none" | "pending" | "friend"
+
+  useEffect(() => {
+    async function load() {
+      const u = await getUserById(userId);
+      setActualUser(u);
+      if (u && currentUser && u.id !== currentUser.id) {
+        const [friend, pending] = await Promise.all([isFriend(userId), hasPendingRequest(userId)]);
+        setFriendStatus(friend ? "friend" : pending ? "pending" : "none");
+      }
+    }
+    load();
+  }, [userId, currentUser]);
 
   const following = localFollowing !== null ? localFollowing : isFollowing(userId);
 
@@ -30,17 +44,17 @@ export default function UserProfile() {
     setLocalFollowing(nowFollowing);
   };
 
-  const user = getUserById(userId);
-  const allUsers = getAllUsers ? getAllUsers() : [];
-  const fallbackUser = allUsers.find(u => u.id === userId);
-  const actualUser = user || fallbackUser;
+  const handleAddFriend = async () => {
+    if (friendStatus !== "none") return;
+    setFriendStatus("pending");
+    await sendFriendRequest(userId);
+  };
 
   if (!actualUser) {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center max-w-md mx-auto">
-        <div className="text-5xl mb-4">👤</div>
-        <p className="font-semibold text-gray-900">User not found</p>
-        <button onClick={() => navigate(-1)} className="mt-4 text-[#1877F2] font-semibold">Go back</button>
+        <div className="w-8 h-8 border-4 border-gray-200 border-t-[#1877F2] rounded-full animate-spin mb-4" />
+        <p className="text-gray-400 text-sm">Loading profile...</p>
       </div>
     );
   }
@@ -146,9 +160,9 @@ export default function UserProfile() {
               📍 {displayLocation}
             </span>
           )}
-          {user.mobileNumber && (
+          {actualUser.mobileNumber && (
             <span className="flex items-center gap-1 text-xs text-gray-600 bg-gray-100 rounded-full px-2 py-1">
-              📱 {user.mobileNumber}
+              📱 {actualUser.mobileNumber}
             </span>
           )}
         </div>
@@ -157,16 +171,16 @@ export default function UserProfile() {
         {!isOwnProfile ? (
           <div className="flex gap-2 mb-4">
             <button
-              onClick={handleFollow}
+              onClick={handleAddFriend}
               className={`flex-1 font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 text-sm transition-colors ${
-                following ? "bg-gray-100 text-gray-800" : "bg-[#1877F2] text-white"
+                friendStatus === "friend" ? "bg-gray-100 text-gray-800" :
+                friendStatus === "pending" ? "bg-gray-100 text-gray-500" :
+                "bg-[#1877F2] text-white"
               }`}
             >
-              {following ? (
-                <><Check className="w-4 h-4" /> Following</>
-              ) : (
-                <><UserPlus className="w-4 h-4" /> Follow</>
-              )}
+              {friendStatus === "friend" ? <><Check className="w-4 h-4" /> Friends</> :
+               friendStatus === "pending" ? <><Check className="w-4 h-4" /> Request sent</> :
+               <><UserPlus className="w-4 h-4" /> Add friend</>}
             </button>
             <button
               onClick={() => navigate("/messages", { state: { startChatWith: actualUser } })}

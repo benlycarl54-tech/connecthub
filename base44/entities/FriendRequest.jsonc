@@ -1,0 +1,41 @@
+{
+  "name": "FriendRequest",
+  "type": "object",
+  "properties": {
+    "from_user_id": {
+      "type": "string",
+      "description": "ID of the user who sent the request"
+    },
+    "from_first_name": {
+      "type": "string",
+      "description": "Sender's first name"
+    },
+    "from_last_name": {
+      "type": "string",
+      "description": "Sender's last name"
+    },
+    "from_avatar": {
+      "type": "string",
+      "description": "Sender's profile picture URL"
+    },
+    "to_user_id": {
+      "type": "string",
+      "description": "ID of the user receiving the request"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted",
+        "declined"
+      ],
+      "default": "pending",
+      "description": "Status of the friend request"
+    }
+  },
+  "required": [
+    "from_user_id",
+    "to_user_id",
+    "status"
+  ]
+}
