@@ -71,7 +71,7 @@ export default function ChatView({ convo, currentUser, onBack, onSend }) {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (!text.trim() || !convo) return;
     const msg = {
       id: Date.now(),
@@ -85,6 +85,27 @@ export default function ChatView({ convo, currentUser, onBack, onSend }) {
     // Store in shared conversation space
     saveMessages(convo.id, updated);
     onSend(convo, msg);
+    
+    // Push notification to recipient
+    try {
+      const notifKey = `fb_notifications_${convo.otherId}`;
+      const notifications = JSON.parse(localStorage.getItem(notifKey) || "[]");
+      notifications.unshift({
+        id: Date.now(),
+        type: "message",
+        text: `${currentUser.firstName} ${currentUser.lastName} sent you a message: "${msg.text.substring(0, 30)}${msg.text.length > 30 ? "..." : ""}"`,
+        avatar: currentUser.profilePicture || null,
+        avatarInitial: currentUser.firstName?.[0] || "?",
+        avatarColor: "bg-[#1877F2]",
+        actorName: `${currentUser.firstName} ${currentUser.lastName}`,
+        timestamp: Date.now(),
+        read: false,
+      });
+      localStorage.setItem(notifKey, JSON.stringify(notifications));
+    } catch (err) {
+      console.error("Notification error:", err);
+    }
+    
     setText("");
     setShowEmoji(false);
     inputRef.current?.focus();
@@ -109,6 +130,27 @@ export default function ChatView({ convo, currentUser, onBack, onSend }) {
     setMessages(updated);
     saveMessages(convo.id, updated);
     onSend(convo, msg);
+    
+    // Push notification to recipient
+    try {
+      const notifKey = `fb_notifications_${convo.otherId}`;
+      const notifications = JSON.parse(localStorage.getItem(notifKey) || "[]");
+      notifications.unshift({
+        id: Date.now(),
+        type: "message",
+        text: `${currentUser.firstName} ${currentUser.lastName} sent you an image`,
+        avatar: currentUser.profilePicture || null,
+        avatarInitial: currentUser.firstName?.[0] || "?",
+        avatarColor: "bg-[#1877F2]",
+        actorName: `${currentUser.firstName} ${currentUser.lastName}`,
+        timestamp: Date.now(),
+        read: false,
+      });
+      localStorage.setItem(notifKey, JSON.stringify(notifications));
+    } catch (err) {
+      console.error("Notification error:", err);
+    }
+    
     setShowMediaUpload(false);
   };
 
@@ -126,6 +168,27 @@ export default function ChatView({ convo, currentUser, onBack, onSend }) {
     setMessages(updated);
     saveMessages(convo.id, updated);
     onSend(convo, msg);
+    
+    // Push notification to recipient
+    try {
+      const notifKey = `fb_notifications_${convo.otherId}`;
+      const notifications = JSON.parse(localStorage.getItem(notifKey) || "[]");
+      notifications.unshift({
+        id: Date.now(),
+        type: "message",
+        text: `${currentUser.firstName} ${currentUser.lastName} sent you a voice message`,
+        avatar: currentUser.profilePicture || null,
+        avatarInitial: currentUser.firstName?.[0] || "?",
+        avatarColor: "bg-[#1877F2]",
+        actorName: `${currentUser.firstName} ${currentUser.lastName}`,
+        timestamp: Date.now(),
+        read: false,
+      });
+      localStorage.setItem(notifKey, JSON.stringify(notifications));
+    } catch (err) {
+      console.error("Notification error:", err);
+    }
+    
     setShowMediaUpload(false);
   };
 
