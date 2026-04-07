@@ -77,17 +77,38 @@ export default function Profile() {
     setEditingUsername(false);
   };
 
-  const handleCoverUpload = (e) => {
+  const handleCoverUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const base64 = event.target?.result;
-      if (typeof base64 === 'string') {
-        updateCurrentUser({ coverPhoto: base64 });
-      }
-    };
-    reader.readAsDataURL(file);
+    try {
+      const { base44: b44 } = await import("@/api/base44Client");
+      const { file_url } = await b44.integrations.Core.UploadFile({ file });
+      await updateCurrentUser({ coverPhoto: file_url });
+      // Save as a public post so others can see the cover photo update
+      const coverPost = {
+        id: Date.now(),
+        authorId: currentUser?.id || "me",
+        name: fullName,
+        avatar: picture || null,
+        time: "Just now",
+        privacy: "🌐",
+        content: "updated their cover photo.",
+        image: file_url,
+        images: [file_url],
+        likes: 0,
+        comments: 0,
+        shares: 0,
+        reactions: "",
+        verified: currentUser?.is_verified || false,
+        isCoverUpdate: true,
+      };
+      const stored = JSON.parse(localStorage.getItem("fb_user_posts") || "[]");
+      stored.unshift(coverPost);
+      localStorage.setItem("fb_user_posts", JSON.stringify(stored.slice(0, 200)));
+      setPostRefresh(r => r + 1);
+    } catch (err) {
+      console.error("Cover upload failed", err);
+    }
   };
 
   const [uploadingPic, setUploadingPic] = useState(false);
@@ -192,9 +213,10 @@ export default function Profile() {
             {!user.coverPhoto && <span className="text-white/70 text-sm">Add cover photo</span>}
             <button 
               onClick={() => coverInputRef.current?.click()}
-              className="absolute bottom-2 right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow hover:bg-gray-100"
+              className="absolute bottom-2 right-2 flex items-center gap-1.5 bg-white rounded-full px-3 py-1.5 shadow hover:bg-gray-100"
             >
               <Camera className="w-4 h-4 text-gray-700" />
+              <span className="text-xs font-semibold text-gray-700">{user.coverPhoto ? "Change" : "Add photo"}</span>
             </button>
             <input
               ref={coverInputRef}

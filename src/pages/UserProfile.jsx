@@ -65,9 +65,13 @@ export default function UserProfile() {
     : parseInt(user.id?.slice(-3) || "0", 10) || 0;
   const theme = PROFILE_THEMES[(idNum || 0) % PROFILE_THEMES.length];
 
-  const userPosts = FEED_POSTS.filter(p => p.authorId === user.id);
-  const displayPosts = userPosts.length ? userPosts : FEED_POSTS.slice((idNum || 0) % PROFILE_THEMES.length, ((idNum || 0) % PROFILE_THEMES.length) + 3);
-  const photoPosts = displayPosts.filter(p => p.image || p.videoThumb);
+  const localUserPosts = (() => {
+    try { return JSON.parse(localStorage.getItem("fb_user_posts") || "[]").filter(p => p.authorId === user.id); } catch { return []; }
+  })();
+  const feedPosts = FEED_POSTS.filter(p => p.authorId === user.id);
+  const combinedPosts = [...localUserPosts, ...feedPosts];
+  const displayPosts = combinedPosts.length ? combinedPosts : FEED_POSTS.slice((idNum || 0) % PROFILE_THEMES.length, ((idNum || 0) % PROFILE_THEMES.length) + 3);
+  const photoPosts = displayPosts.filter(p => p.image || p.videoThumb || (p.images && p.images.length > 0));
 
   const following = localFollowing !== null ? localFollowing : isFollowing(userId);
 
