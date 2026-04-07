@@ -172,15 +172,20 @@ export default function UserProfile() {
           <div className="flex gap-2 mb-4">
             <button
               onClick={handleAddFriend}
+              disabled={friendStatus !== "none"}
               className={`flex-1 font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 text-sm transition-colors ${
-                friendStatus === "friend" ? "bg-gray-100 text-gray-800" :
+                friendStatus === "friend" ? "bg-green-100 text-green-700" :
                 friendStatus === "pending" ? "bg-gray-100 text-gray-500" :
                 "bg-[#1877F2] text-white"
               }`}
             >
-              {friendStatus === "friend" ? <><Check className="w-4 h-4" /> Friends</> :
-               friendStatus === "pending" ? <><Check className="w-4 h-4" /> Request sent</> :
-               <><UserPlus className="w-4 h-4" /> Add friend</>}
+              {friendStatus === "friend" ? (
+                <><Check className="w-4 h-4" /> Friends</>
+              ) : friendStatus === "pending" ? (
+                <><Check className="w-4 h-4" /> Requested</>
+              ) : (
+                <><UserPlus className="w-4 h-4" /> Add friend</>
+              )}
             </button>
             <button
               onClick={() => navigate("/messages", { state: { startChatWith: actualUser } })}
