@@ -14,14 +14,14 @@ export default function Landing() {
     if (currentUser) navigate("/home");
   }, [currentUser]);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
     if (!identifier || !password) {
       setError("Please enter your email/phone and password");
       return;
     }
-    const result = login(identifier, password);
+    const result = await login(identifier, password);
     if (result.success) {
       navigate("/home");
     } else {
