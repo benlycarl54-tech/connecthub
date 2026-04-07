@@ -23,6 +23,7 @@ function getInitialComments(postId, count) {
     text: pool[i % pool.length],
     time: `${i + 1}h`,
     likes: Math.floor(Math.random() * 20),
+    replies: [],
   }));
 }
 
@@ -41,6 +42,8 @@ export default function PostCard({ post, authorName, authorAvatar, authorVerifie
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState(() => getInitialComments(post.id, post.comments || 0));
   const [commentText, setCommentText] = useState("");
+  const [replyingTo, setReplyingTo] = useState(null); // comment id
+  const [replyText, setReplyText] = useState("");
   const [reactionTimer, setReactionTimer] = useState(null);
   const [videoPlaying, setVideoPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
@@ -124,10 +127,10 @@ export default function PostCard({ post, authorName, authorAvatar, authorVerifie
       text: commentText.trim(),
       time: "Just now",
       likes: 0,
+      replies: [],
     };
     setComments(prev => [...prev, newComment]);
     setCommentText("");
-    // Notify post author
     if (currentUser && authorId && authorId !== currentUser.id && !authorId.startsWith("feed_")) {
       pushNotification(authorId, {
         type: "comment",
@@ -138,6 +141,24 @@ export default function PostCard({ post, authorName, authorAvatar, authorVerifie
         actorName: `${currentUser.firstName} ${currentUser.lastName}`,
       });
     }
+  };
+
+  const submitReply = (commentId) => {
+    if (!replyText.trim()) return;
+    const reply = {
+      id: Date.now(),
+      name: currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : "You",
+      avatar: currentUser?.profilePicture || null,
+      color: "bg-[#1877F2]",
+      text: replyText.trim(),
+      time: "Just now",
+      likes: 0,
+    };
+    setComments(prev => prev.map(c =>
+      c.id === commentId ? { ...c, replies: [...(c.replies || []), reply] } : c
+    ));
+    setReplyText("");
+    setReplyingTo(null);
   };
 
   return (
@@ -297,28 +318,94 @@ export default function PostCard({ post, authorName, authorAvatar, authorVerifie
       {showComments && (
         <div className="border-t border-gray-100">
           {/* Comment list */}
-          <div className="px-4 pt-3 space-y-3 max-h-64 overflow-y-auto">
+          <div className="px-4 pt-3 space-y-3 max-h-96 overflow-y-auto">
             {comments.map(c => (
-              <div key={c.id} className="flex gap-2">
-                <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
-                  {c.avatar ? (
-                    <img src={c.avatar} alt={c.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className={`w-full h-full ${c.color} flex items-center justify-center`}>
-                      <span className="text-white text-xs font-bold">{c.name[0]}</span>
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1">
-                  <div className="bg-gray-100 rounded-2xl px-3 py-2 inline-block max-w-full">
-                    <p className="text-xs font-semibold text-gray-900">{c.name}</p>
-                    <p className="text-sm text-gray-800">{c.text}</p>
+              <div key={c.id}>
+                {/* Top-level comment */}
+                <div className="flex gap-2">
+                  <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+                    {c.avatar ? (
+                      <img src={c.avatar} alt={c.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className={`w-full h-full ${c.color} flex items-center justify-center`}>
+                        <span className="text-white text-xs font-bold">{c.name[0]}</span>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-center gap-3 mt-1 px-2">
-                    <span className="text-xs text-gray-500">{c.time}</span>
-                    <button className="text-xs font-semibold text-gray-500 hover:text-gray-800">Like</button>
-                    <button className="text-xs font-semibold text-gray-500 hover:text-gray-800">Reply</button>
-                    {c.likes > 0 && <span className="text-xs text-gray-400">👍 {c.likes}</span>}
+                  <div className="flex-1">
+                    <div className="bg-gray-100 rounded-2xl px-3 py-2 inline-block max-w-full">
+                      <p className="text-xs font-semibold text-gray-900">{c.name}</p>
+                      <p className="text-sm text-gray-800">{c.text}</p>
+                    </div>
+                    <div className="flex items-center gap-3 mt-1 px-2">
+                      <span className="text-xs text-gray-500">{c.time}</span>
+                      <button className="text-xs font-semibold text-gray-500 hover:text-gray-800">Like</button>
+                      <button
+                        onClick={() => setReplyingTo(replyingTo === c.id ? null : c.id)}
+                        className="text-xs font-semibold text-[#1877F2] hover:text-blue-700"
+                      >
+                        Reply
+                      </button>
+                      {c.likes > 0 && <span className="text-xs text-gray-400">👍 {c.likes}</span>}
+                    </div>
+
+                    {/* Nested replies */}
+                    {c.replies?.length > 0 && (
+                      <div className="mt-2 ml-2 space-y-2 border-l-2 border-gray-200 pl-3">
+                        {c.replies.map(r => (
+                          <div key={r.id} className="flex gap-2">
+                            <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
+                              {r.avatar ? (
+                                <img src={r.avatar} alt={r.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className={`w-full h-full ${r.color} flex items-center justify-center`}>
+                                  <span className="text-white text-[10px] font-bold">{r.name[0]}</span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <div className="bg-gray-100 rounded-2xl px-3 py-1.5 inline-block max-w-full">
+                                <p className="text-xs font-semibold text-gray-900">{r.name}</p>
+                                <p className="text-sm text-gray-800">{r.text}</p>
+                              </div>
+                              <div className="flex items-center gap-3 mt-0.5 px-2">
+                                <span className="text-xs text-gray-500">{r.time}</span>
+                                <button className="text-xs font-semibold text-gray-500 hover:text-gray-800">Like</button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Reply input */}
+                    {replyingTo === c.id && (
+                      <div className="flex items-center gap-2 mt-2 ml-2 pl-3 border-l-2 border-gray-200">
+                        <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
+                          {currentUser?.profilePicture ? (
+                            <img src={currentUser.profilePicture} alt="me" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full bg-[#1877F2] flex items-center justify-center">
+                              <span className="text-white text-[10px] font-bold">{currentUser?.firstName?.[0] || "?"}</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 flex items-center bg-gray-100 rounded-full px-3 py-1.5 gap-2">
+                          <input
+                            autoFocus
+                            type="text"
+                            placeholder={`Reply to ${c.name.split(" ")[0]}...`}
+                            value={replyText}
+                            onChange={e => setReplyText(e.target.value)}
+                            onKeyDown={e => e.key === "Enter" && submitReply(c.id)}
+                            className="flex-1 bg-transparent text-sm outline-none text-gray-800 placeholder-gray-400"
+                          />
+                          <button onClick={() => submitReply(c.id)} className="text-[#1877F2]">
+                            <Send className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
