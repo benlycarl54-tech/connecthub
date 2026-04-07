@@ -39,7 +39,15 @@ export default function UserProfile() {
   useEffect(() => {
     async function load() {
       const u = await getUserById(userId);
-      setUser(u);
+      // Ensure stats are loaded with fallback to 0
+      if (u) {
+        setUser({
+          ...u,
+          followers: u.followers ?? 0,
+          following: u.following ?? 0,
+          likes: u.likes ?? 0,
+        });
+      }
       if (u && currentUser && u.id !== currentUser.id) {
         const [friend, pending] = await Promise.all([isFriend(userId), hasPendingRequest(userId)]);
         setFriendStatus(friend ? "friend" : pending ? "pending" : "none");
