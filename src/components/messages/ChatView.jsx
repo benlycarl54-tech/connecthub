@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { ChevronLeft, Send, Phone, Video, Info, Smile } from "lucide-react";
+import VerifiedBadge from "@/components/VerifiedBadge";
 
 const EMOJI_LIST = ["😀","😂","❤️","👍","🔥","😍","🙏","😭","💯","🎉"];
 
@@ -84,7 +85,10 @@ export default function ChatView({ convo, currentUser, onBack, onSend }) {
           <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-gray-900 text-sm truncate">{convo.otherName}</p>
+          <div className="flex items-center gap-1">
+            <p className="font-semibold text-gray-900 text-sm truncate">{convo.otherName}</p>
+            {convo.is_verified && <VerifiedBadge size={14} />}
+          </div>
           <p className="text-xs text-green-500 font-medium">Active now</p>
         </div>
         <div className="flex items-center gap-1">

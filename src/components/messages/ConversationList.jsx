@@ -1,5 +1,6 @@
 import { Search, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import VerifiedBadge from "@/components/VerifiedBadge";
 
 export default function ConversationList({ conversations, onOpen, onNewChat, search, setSearch, currentUserId }) {
   const navigate = useNavigate();
@@ -81,9 +82,12 @@ export default function ConversationList({ conversations, onOpen, onNewChat, sea
             {/* Text */}
             <div className="flex-1 text-left min-w-0">
               <div className="flex items-center justify-between">
-                <p className={`text-sm truncate ${convo.unread ? "font-bold text-gray-900" : "font-semibold text-gray-900"}`}>
-                  {convo.otherName}
-                </p>
+                <div className="flex items-center gap-1 truncate">
+                  <p className={`text-sm truncate ${convo.unread ? "font-bold text-gray-900" : "font-semibold text-gray-900"}`}>
+                    {convo.otherName}
+                  </p>
+                  {convo.is_verified && <VerifiedBadge size={14} />}
+                </div>
                 {convo.lastTime && (
                   <span className={`text-xs flex-shrink-0 ml-2 ${convo.unread ? "text-[#1877F2] font-semibold" : "text-gray-400"}`}>
                     {convo.lastTime}
