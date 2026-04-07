@@ -85,17 +85,19 @@ export default function Profile() {
     reader.readAsDataURL(file);
   };
 
-  const handleProfilePictureUpload = (e) => {
+  const [uploadingPic, setUploadingPic] = useState(false);
+
+  const handleProfilePictureUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const base64 = event.target?.result;
-      if (typeof base64 === 'string') {
-        updateCurrentUser({ profilePicture: base64 });
-      }
-    };
-    reader.readAsDataURL(file);
+    setUploadingPic(true);
+    try {
+      const { base44: b44 } = await import("@/api/base44Client");
+      const { file_url } = await b44.integrations.Core.UploadFile({ file });
+      await updateCurrentUser({ profilePicture: file_url });
+    } finally {
+      setUploadingPic(false);
+    }
   };
 
   const handleShareProfile = () => {
@@ -188,10 +190,13 @@ export default function Profile() {
                   )}
                 </div>
                 <button 
-                onClick={() => profilePicInputRef.current?.click()}
+                onClick={() => !uploadingPic && profilePicInputRef.current?.click()}
                 className="absolute bottom-1 right-1 w-7 h-7 bg-gray-200 rounded-full flex items-center justify-center border-2 border-white hover:bg-gray-300"
               >
-                <Camera className="w-3.5 h-3.5 text-gray-700" />
+                {uploadingPic
+                  ? <div className="w-3.5 h-3.5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                  : <Camera className="w-3.5 h-3.5 text-gray-700" />
+                }
               </button>
               <input
                 ref={profilePicInputRef}
