@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Search, MoreHorizontal, Camera, Pencil, Plus, ChevronDown, X, LogOut, Shield, Check, AtSign, Share2 } from "lucide-react";
+import { ChevronLeft, Search, MoreHorizontal, Camera, Pencil, Plus, ChevronDown, X, LogOut, Shield, Check, AtSign, Share2, BarChart2 } from "lucide-react";
 import CreatePost from "./CreatePost";
 import { useFBAuth } from "@/context/AuthContext";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import PostCard from "@/components/post/PostCard";
 import GalleryTab from "@/components/gallery/GalleryTab";
+import ProModeModal from "@/components/profile/ProModeModal";
 
 function getUserPosts(userId) {
   try {
@@ -36,6 +37,10 @@ export default function Profile() {
   const [postRefresh, setPostRefresh] = useState(0);
   const coverInputRef = useRef(null);
   const profilePicInputRef = useRef(null);
+  const [showProModal, setShowProModal] = useState(false);
+  const [isProMode, setIsProMode] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("fb_pro_mode") || "false"); } catch { return false; }
+  });
 
   const user = currentUser || data;
   const fullName = `${user.firstName || "Your"} ${user.lastName || "Name"}`;
@@ -100,6 +105,12 @@ export default function Profile() {
     }
   };
 
+  const handleUpgradeToPro = () => {
+    setIsProMode(true);
+    localStorage.setItem("fb_pro_mode", "true");
+    setShowProModal(false);
+  };
+
   const handleShareProfile = () => {
     if (!currentUser?.id) return;
     const profileLink = `${window.location.origin}/user/${currentUser.id}`;
@@ -125,7 +136,7 @@ export default function Profile() {
             <MoreHorizontal className="w-5 h-5 text-gray-700 dark:text-gray-300" />
           </button>
           {showMenu && (
-           <div className="absolute right-0 top-11 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 w-48 z-50 overflow-hidden">
+           <div className="absolute right-0 top-11 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 w-52 z-50 overflow-hidden">
              <button
                onClick={handleShareProfile}
                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 text-left"
@@ -133,6 +144,23 @@ export default function Profile() {
                <Share2 className="w-5 h-5 text-[#1877F2]" />
                <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">Share profile</span>
              </button>
+             {!isProMode ? (
+               <button
+                 onClick={() => { setShowMenu(false); setShowProModal(true); }}
+                 className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 text-left border-t border-gray-100 dark:border-gray-700"
+               >
+                 <span className="text-lg">⭐</span>
+                 <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">Switch to Pro mode</span>
+               </button>
+             ) : (
+               <button
+                 onClick={() => { setIsProMode(false); localStorage.setItem("fb_pro_mode", "false"); setShowMenu(false); }}
+                 className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 text-left border-t border-gray-100 dark:border-gray-700"
+               >
+                 <span className="text-lg">👤</span>
+                 <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">Switch to Personal</span>
+               </button>
+             )}
              {(currentUser?.is_admin || currentUser?.role === 'admin') && (
                <button
                  onClick={() => { setShowMenu(false); navigate("/admin"); }}
@@ -249,13 +277,30 @@ export default function Profile() {
               <span className="text-gray-500"> posts</span>
             </p>
 
+            {isProMode && (
+              <p className="text-xs text-gray-500 mb-1">Profile · Digital creator</p>
+            )}
+
             <div className="flex gap-2 mt-3">
-              <button onClick={() => setShowCreatePost(true)} className="flex-1 bg-[#1877F2] text-white font-semibold py-2 rounded-lg flex items-center justify-center gap-1.5 text-sm">
-                <Plus className="w-4 h-4" /> Create
-              </button>
-              <button onClick={() => navigate("/edit-profile")} className="flex-1 bg-gray-100 text-gray-800 font-semibold py-2 rounded-lg flex items-center justify-center gap-1.5 text-sm">
-                <Pencil className="w-4 h-4" /> Edit profile
-              </button>
+              {isProMode ? (
+                <>
+                  <button className="flex-1 bg-[#1877F2] text-white font-semibold py-2 rounded-lg flex items-center justify-center gap-1.5 text-sm">
+                    <BarChart2 className="w-4 h-4" /> Dashboard
+                  </button>
+                  <button onClick={() => navigate("/create-story")} className="flex-1 bg-gray-100 text-gray-800 font-semibold py-2 rounded-lg flex items-center justify-center gap-1.5 text-sm">
+                    <Plus className="w-4 h-4" /> Add to story
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button onClick={() => setShowCreatePost(true)} className="flex-1 bg-[#1877F2] text-white font-semibold py-2 rounded-lg flex items-center justify-center gap-1.5 text-sm">
+                    <Plus className="w-4 h-4" /> Create
+                  </button>
+                  <button onClick={() => navigate("/edit-profile")} className="flex-1 bg-gray-100 text-gray-800 font-semibold py-2 rounded-lg flex items-center justify-center gap-1.5 text-sm">
+                    <Pencil className="w-4 h-4" /> Edit profile
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -437,6 +482,15 @@ export default function Profile() {
         />
       ))}
 
+      {/* Manage posts — pro mode */}
+      {isProMode && (
+        <div className="bg-white mt-2 px-4 py-3">
+          <button className="w-full flex items-center justify-center gap-2 py-3 border border-gray-200 rounded-xl text-gray-700 font-semibold text-sm hover:bg-gray-50">
+            <BarChart2 className="w-4 h-4" /> Manage posts
+          </button>
+        </div>
+      )}
+
       {/* Logout */}
       <div className="bg-white mt-2 mb-2 px-4 py-3">
         <button
@@ -448,6 +502,13 @@ export default function Profile() {
       </div>
 
       {showCreatePost && <CreatePost onClose={handleCloseCreatePost} onPost={handleNewPost} />}
+      {showProModal && (
+        <ProModeModal
+          user={{ ...user, ...currentUser }}
+          onClose={() => setShowProModal(false)}
+          onUpgrade={handleUpgradeToPro}
+        />
+      )}
     </div>
   );
 }
