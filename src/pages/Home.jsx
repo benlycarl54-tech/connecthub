@@ -44,10 +44,16 @@ export default function Home() {
   const [lastPollTime, setLastPollTime] = useState(0);
   const [showMenu, setShowMenu] = useState(false);
   const { getFriends } = useFBAuth();
+  const [friendIds, setFriendIds] = useState([]);
 
   const avatar = currentUser?.profilePicture || data.profilePicture;
   const firstName = currentUser?.firstName || data.firstName || "User";
-  const friendIds = getFriends().map(f => f.id);
+
+  useEffect(() => {
+    if (currentUser) {
+      getFriends().then(friends => setFriendIds(friends.map(f => f.id))).catch(() => {});
+    }
+  }, [currentUser?.id]);
 
   // Poll for live state and new posts every 5s
   useEffect(() => {
