@@ -39,13 +39,12 @@ export default function UserProfile() {
   useEffect(() => {
     async function load() {
       const u = await getUserById(userId);
-      // Ensure stats are loaded with fallback to 0
       if (u) {
         setUser({
           ...u,
-          followers: u.followers ?? 0,
-          following: u.following ?? 0,
-          likes: u.likes ?? 0,
+          followers: typeof u.followers === 'number' ? u.followers : 0,
+          following: typeof u.following === 'number' ? u.following : 0,
+          likes: typeof u.likes === 'number' ? u.likes : 0,
         });
       }
       if (u && currentUser && u.id !== currentUser.id) {
@@ -54,7 +53,7 @@ export default function UserProfile() {
       }
     }
     load();
-  }, [userId, currentUser]);
+  }, [userId, currentUser, getUserById, isFriend, hasPendingRequest]);
 
   if (!user) {
     return (
@@ -142,7 +141,9 @@ export default function UserProfile() {
               <span className="font-bold">{formatCount(user.followers)}</span>
               <span className="text-gray-500"> followers · </span>
               <span className="font-bold">{formatCount(user.following)}</span>
-              <span className="text-gray-500"> following</span>
+              <span className="text-gray-500"> following · </span>
+              <span className="font-bold">{formatCount(user.likes)}</span>
+              <span className="text-gray-500"> likes</span>
             </p>
           </div>
         </div>
